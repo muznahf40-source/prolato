@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Prolato Outreach Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#122622;
+  --teal:#1B3A34;
+  --teal-deep:#0E211D;
+  --paper:#F4F6F4;
+  --paper-card:#FFFFFF;
+  --line:#DDE3DF;
+  --muted:#5B6C66;
+  --brick:#A85338;
+  --sage:#4C7A5B;
+  --sage-bg:#E4F0E6;
+  --ochre:#B8842E;
+  --ochre-bg:#FBF0DA;
+  --rust:#B5473A;
+  --rust-bg:#FBE6E2;
+  --blue:#3E6C8C;
+  --blue-bg:#E4EEF4;
+  --radius:10px;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Inter',system-ui,sans-serif;
+  font-size:14px;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;margin:0;}
+.mono{font-family:'IBM Plex Mono',monospace;}
+
+/* ---- Top bar ---- */
+.topbar{
+  background:var(--teal);
+  color:#fff;
+  padding:22px 28px 20px;
+}
+.topbar-inner{max-width:1300px;margin:0 auto;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:14px;}
+.brand-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#9FC2B4;margin-bottom:6px;}
+.brand-title{font-size:26px;color:#fff;}
+.brand-sub{color:#B9CFC7;font-size:13px;margin-top:4px;}
+.sync-pill{
+  display:flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.18);
+  padding:7px 13px;border-radius:20px;
+  font-size:12px;color:#CFE3DB;
+}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#7FD7A8;box-shadow:0 0 0 3px rgba(127,215,168,.25);}
+
+/* ---- Pipeline stage strip ---- */
+.stage-strip{
+  max-width:1300px;margin:0 auto;padding:0 28px;
+  transform:translateY(22px);
+}
+.stage-row{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:0;
+  background:var(--paper-card);border-radius:var(--radius);
+  box-shadow:0 6px 20px rgba(14,33,29,.10);overflow:hidden;
+  border:1px solid var(--line);
+}
+.stage{padding:16px 20px;border-right:1px solid var(--line);position:relative;cursor:pointer;transition:background .15s;}
+.stage:last-child{border-right:none;}
+.stage:hover{background:#F8FAF8;}
+.stage.active{background:#EFF4F0;}
+.stage-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-family:'IBM Plex Mono',monospace;}
+.stage-num{font-family:'Fraunces',serif;font-size:30px;font-weight:600;margin-top:4px;}
+.stage-bar{height:3px;border-radius:2px;margin-top:10px;background:var(--line);overflow:hidden;}
+.stage-bar-fill{height:100%;border-radius:2px;}
+.stage[data-k="total"] .stage-num{color:var(--ink);}
+.stage[data-k="completed"] .stage-num{color:var(--sage);}
+.stage[data-k="pending"] .stage-num{color:var(--ochre);}
+.stage[data-k="followup"] .stage-num{color:var(--rust);}
+
+/* ---- Main content ---- */
+main{max-width:1300px;margin:0 auto;padding:52px 28px 60px;}
+
+.controls{
+  display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+  margin-bottom:16px;
+}
+.search-wrap{position:relative;flex:1;min-width:220px;}
+.search-wrap input{
+  width:100%;padding:10px 14px 10px 34px;border-radius:8px;border:1px solid var(--line);
+  font-family:'Inter';font-size:13.5px;background:#fff;
+}
+.search-wrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);opacity:.45;}
+select{
+  padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:#fff;
+  font-family:'Inter';font-size:13.5px;color:var(--ink);
+}
+.btn{
+  padding:10px 16px;border-radius:8px;border:1px solid var(--teal);background:var(--teal);color:#fff;
+  font-family:'Inter';font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap;
+}
+.btn:hover{background:var(--teal-deep);}
+.btn.ghost{background:transparent;color:var(--teal);}
+.btn.ghost:hover{background:#EAF0EC;}
+
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px;}
+.chip{
+  padding:6px 13px;border-radius:20px;border:1px solid var(--line);background:#fff;
+  font-size:12.5px;cursor:pointer;color:var(--muted);
+}
+.chip.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+
+.count-line{color:var(--muted);font-size:12.5px;margin-bottom:10px;}
+
+/* ---- Table ---- */
+.table-wrap{background:var(--paper-card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
+table{width:100%;border-collapse:collapse;}
+thead th{
+  text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--muted);font-family:'IBM Plex Mono',monospace;font-weight:500;
+  padding:12px 16px;border-bottom:1px solid var(--line);background:#FAFBFA;cursor:pointer;user-select:none;
+}
+thead th:hover{color:var(--ink);}
+tbody tr{border-bottom:1px solid var(--line);cursor:pointer;transition:background .12s;}
+tbody tr:hover{background:#F8FAF8;}
+tbody tr:last-child{border-bottom:none;}
+tbody td{padding:13px 16px;vertical-align:top;}
+.doc-name{font-weight:600;color:var(--ink);}
+.practice-name{color:var(--muted);font-size:12.5px;margin-top:2px;}
+.pill{
+  display:inline-block;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:600;
+  white-space:nowrap;
+}
+.pill.completed{background:var(--sage-bg);color:var(--sage);}
+.pill.pending{background:var(--ochre-bg);color:var(--ochre);}
+.pill.followup{background:var(--rust-bg);color:var(--rust);}
+.pill.scheduled{background:var(--blue-bg);color:var(--blue);}
+.pill.none{background:#EEE;color:#999;}
+.notes-preview{color:var(--muted);font-size:12.5px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.empty-state{padding:60px 20px;text-align:center;color:var(--muted);}
+
+/* ---- Drawer ---- */
+.overlay{
+  position:fixed;inset:0;background:rgba(14,33,29,.45);display:none;align-items:stretch;justify-content:flex-end;z-index:50;
+}
+.overlay.open{display:flex;}
+.drawer{
+  width:440px;max-width:92vw;background:#fff;height:100%;overflow-y:auto;
+  box-shadow:-12px 0 30px rgba(0,0,0,.15);
+  animation:slideIn .18s ease-out;
+}
+@keyframes slideIn{from{transform:translateX(20px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+.drawer-head{background:var(--teal);color:#fff;padding:22px 24px;position:relative;}
+.drawer-head h2{color:#fff;font-size:19px;}
+.drawer-head .practice{color:#B9CFC7;font-size:13px;margin-top:4px;}
+.drawer-close{position:absolute;top:18px;right:20px;background:none;border:none;color:#fff;font-size:20px;cursor:pointer;opacity:.8;}
+.drawer-close:hover{opacity:1;}
+.drawer-body{padding:22px 24px 100px;}
+.field{margin-bottom:18px;}
+.field label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-bottom:6px;}
+.field input, .field select, .field textarea{
+  width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--line);font-family:'Inter';font-size:13.5px;background:#FAFBFA;
+}
+.field textarea{min-height:90px;resize:vertical;font-family:'Inter';}
+.field .static{padding:10px 12px;background:#FAFBFA;border-radius:8px;border:1px solid var(--line);color:var(--ink);font-size:13.5px;}
+.field-row{display:flex;gap:12px;}
+.field-row .field{flex:1;}
+.drawer-footer{
+  position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);
+  padding:14px 24px;display:flex;gap:10px;justify-content:flex-end;
+}
+.saved-flash{
+  position:fixed;bottom:24px;right:24px;background:var(--ink);color:#fff;padding:11px 18px;border-radius:8px;
+  font-size:13px;box-shadow:0 8px 20px rgba(0,0,0,.2);opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none;z-index:100;
+}
+.saved-flash.show{opacity:1;transform:translateY(0);}
+
+/* ---- Add modal ---- */
+.modal-overlay{position:fixed;inset:0;background:rgba(14,33,29,.45);display:none;align-items:center;justify-content:center;z-index:60;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;border-radius:12px;max-width:520px;width:100%;max-height:88vh;overflow-y:auto;}
+.modal-head{padding:20px 24px;border-bottom:1px solid var(--line);}
+.modal-head h2{font-size:18px;}
+.modal-body{padding:20px 24px;}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px;}
+
+footer{max-width:1300px;margin:0 auto;padding:0 28px 40px;color:var(--muted);font-size:12px;}
+
+@media(max-width:720px){
+  .stage-row{grid-template-columns:repeat(2,1fr);}
+  .stage:nth-child(2){border-right:none;}
+  .stage:nth-child(3), .stage:nth-child(4){border-top:1px solid var(--line);}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div>
+      <div class="brand-eyebrow">Prolato Clinical Research Center · Business Development</div>
+      <div class="brand-title">Physician Outreach Pipeline</div>
+      <div class="brand-sub">Houston-area referral network — site visits, calls & follow-ups</div>
+    </div>
+    <div class="sync-pill"><span class="sync-dot"></span> Synced for the team</div>
+  </div>
+</div>
+
+<div class="stage-strip">
+  <div class="stage-row" id="stageRow"></div>
+</div>
+
+<main>
+  <div class="controls">
+    <div class="search-wrap">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="searchInput" type="text" placeholder="Search doctor, practice, or notes…">
+    </div>
+    <select id="specialtyFilter"></select>
+    <select id="sortSelect">
+      <option value="specialty">Sort: Specialty</option>
+      <option value="status">Sort: Status</option>
+      <option value="doctor">Sort: Doctor name</option>
+      <option value="followup">Sort: Next follow-up</option>
+    </select>
+    <button class="btn" id="addBtn">+ Add contact</button>
+  </div>
+
+  <div class="chips" id="statusChips"></div>
+
+  <div class="count-line" id="countLine"></div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Doctor / Practice</th>
+          <th>Specialty</th>
+          <th>Status</th>
+          <th>Last outreach</th>
+          <th>Next follow-up</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+    <div class="empty-state" id="emptyState" style="display:none;">No contacts match your filters.</div>
+  </div>
+
+  <footer>Data is shared across everyone using this link — edits save automatically.</footer>
+</main>
+
+<div class="overlay" id="drawerOverlay">
+  <div class="drawer" id="drawer"></div>
+</div>
+
+<div class="modal-overlay" id="addOverlay">
+  <div class="modal" id="addModal"></div>
+</div>
+
+<div class="saved-flash" id="savedFlash">Saved</div>
+
+<script id="app-data" type="application/json">[{"Outreach Date": "", "Doctor Name": "Multiple", "Specialty": "Cardiology", "Practice Name": "Memorial Cardiology Associates", "Address": "915 Gessner, Suite 900, Houston, TX 77024", "Contact": "713-464-6006", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 1}, {"Outreach Date": "", "Doctor Name": "Multiple", "Specialty": "Cardiology", "Practice Name": "Texas Heart Specialists / HCA", "Address": "6550 Fannin St, Suite 2403, Houston, TX 77030", "Contact": "", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 2}, {"Outreach Date": "", "Doctor Name": "Multiple", "Specialty": "Cardiology", "Practice Name": "Memorial Katy Cardiology Associates", "Address": "1331 W Grand Pkay N, # 130, Katy, Tx 77493", "Contact": "281-392-3401", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 3}, {"Outreach Date": "", "Doctor Name": "Multiple", "Specialty": "Cardiology", "Practice Name": "Cardiology Center of Houston", "Address": "20710 Westheimer, Pkwy, Katy, TX 77450", "Contact": "281-646-9000", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 4}, {"Outreach Date": "", "Doctor Name": "Multiple", "Specialty": "Cardiology", "Practice Name": "Texas Heart and Vein Multispecialty Group", "Address": "1900 N Loop W, Suite 180, Houston, TX 77018", "Contact": "281-888-0809", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 5}, {"Outreach Date": "4/2/2026", "Doctor Name": "Dr. Natalie Hone", "Specialty": "Dermatology", "Practice Name": "The Skin People - Dermatology", "Address": "4545 Bissonnet St #200, Bellaire, TX 77401", "Contact": "(281) 456-4900", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Dropped off marketing materials - will follow up with receptionist", "id": 6}, {"Outreach Date": "4/2/2026", "Doctor Name": "Dr. Camila Antia", "Specialty": "Dermatology", "Practice Name": "The Skin People - Dermatology", "Address": "4545 Bissonnet St #200, Bellaire, TX 77401", "Contact": "(281) 456-4900", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Dropped off marketing materials - will follow up with receptionist", "id": 7}, {"Outreach Date": "4/2/2026", "Doctor Name": "Dr. Howard Gerber, MD", "Specialty": "Dermatology", "Practice Name": "Bellaire Dermatology", "Address": "6565 W Loop S Suite 800, Bellaire, TX 77401", "Contact": "(713) 661-4383", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Already doing clinical research trial with Sanofi", "id": 8}, {"Outreach Date": "4/2/2026", "Doctor Name": "Dr. Nicole Bender, MD", "Specialty": "Dermatology", "Practice Name": "Bellaire Dermatology", "Address": "6565 W Loop S Suite 800, Bellaire, TX 77401", "Contact": "(713) 661-4383", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Already doing clinical research trial with Sanofi", "id": 9}, {"Outreach Date": "4/9/2026", "Doctor Name": "Multiple", "Specialty": "Dermatology", "Practice Name": "Elite Dermatology & Plastic Surgery", "Address": "2571 Kirby Drive, Houston, TX 77019", "Contact": "713-401-9701", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "", "id": 10}, {"Outreach Date": "", "Doctor Name": "Dr. Shah, Dr. Zoghbi, Dr. Mintz, Dr. Duffy", "Specialty": "Dermatology", "Practice Name": "Houston Dermatology Associates", "Address": "6560 Fannin St, Suite 1720, Houston, TX 77030", "Contact": "713-790-0058", "Status": "Pending", "Outreach Type": "", "Notes": "Dropped off marketing materials - will follow up with receptionist", "id": 11}, {"Outreach Date": "", "Doctor Name": "Dr. Bruce, Dr. Adler + team", "Specialty": "Dermatology", "Practice Name": "SBA Dermatology & Plastic Surgery", "Address": "This practice closed on 01/DEC/2025 Dr. Adler is now located at Elite Dermatology, 1930 Pearland Pkwy, Suite 154, Pearland, TX 77581 (Dr. Bruce is no longer listed on website)", "Contact": "281-816-5503", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 12}, {"Outreach Date": "", "Doctor Name": "Dr. Cindy Berthelot", "Specialty": "Dermatology", "Practice Name": "Houston Institute of Dermatology", "Address": "2565 Bay Area Blvd, Houston, TX 77058", "Contact": "281-480-7272", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 13}, {"Outreach Date": "4/9/2026", "Doctor Name": "Multiple", "Specialty": "Dermatology", "Practice Name": "Advanced Dermatology", "Address": "2051 Greenhouse Rd, Suite 270, Houston, TX 77084", "Contact": "281-665-4444", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Indications do not align with what we are looking for.", "id": 14}, {"Outreach Date": "", "Doctor Name": "20+ dermatologists", "Specialty": "Dermatology", "Practice Name": "Complete Dermatology", "Address": "4500 Washington Ave, Suite 250, Houston, TX 77077", "Contact": "281-857-6870", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 15}, {"Outreach Date": "", "Doctor Name": "Dr. Adler", "Specialty": "Dermatology", "Practice Name": "Elite Dermatology", "Address": "1930 Pearland Pkwy, Suite 154, Pearland, TX 77581", "Contact": "713-526-5511", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 16}, {"Outreach Date": "", "Doctor Name": "Dr. Vi Pham, MD", "Specialty": "Endocrinology", "Practice Name": "Medical Clinic of Houston", "Address": "1701 Sunset Blvd, Houston, TX 77005", "Contact": "713-807-4276", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Visited the office and dropped off folder to MA", "id": 17}, {"Outreach Date": "", "Doctor Name": "Multiple", "Specialty": "Endocrinology", "Practice Name": "Houston Endocrinology Center", "Address": "13333 Dotson Rd, Suite 220, Houston, TX 77070", "Contact": "281-251-5234", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 18}, {"Outreach Date": "", "Doctor Name": "Multiple", "Specialty": "Endocrinology", "Practice Name": "Houston Thyroid & Endocrine Specialists", "Address": "23920 Katy Freeway, Suite 500, Katy, TX 77494", "Contact": "713-795-0770", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 19}, {"Outreach Date": "", "Doctor Name": "Dr. Shikha Bharaktiya", "Specialty": "Endocrinology", "Practice Name": "Endocrinology Clinics of Texas", "Address": "7500 Beechnut St, #252, Houston, TX 77074", "Contact": "281-779-4243", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 20}, {"Outreach Date": "", "Doctor Name": "Dr. Aleem Kanji", "Specialty": "Endocrinology", "Practice Name": "Ethos Endocrinology", "Address": "2500 Fondren Rd, Suite 320, Houston, TX 77063", "Contact": "713-804-8349", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 21}, {"Outreach Date": "", "Doctor Name": "Dr. Harbison, Dr. Markan", "Specialty": "Endocrinology", "Practice Name": "Advanced Endocrinology & Diabetes", "Address": "7400 Fannin St, Suite 855, Houston, TX 77054", "Contact": "713-796-9466", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 22}, {"Outreach Date": "", "Doctor Name": "10 physicians", "Specialty": "Endocrinology", "Practice Name": "The Endocrine Center", "Address": "10837 Katy Freeway, Suite 200, Houston, TX 77079", "Contact": "713-468-2122", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 23}, {"Outreach Date": "", "Doctor Name": "Dr. Erin Roe", "Specialty": "Endocrinology", "Practice Name": "Sol Endocrinology", "Address": "4428 N Central Expy, Suite 101, Dallas, TX 75206", "Contact": "469-648-3636", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 24}, {"Outreach Date": "4/2/2026", "Doctor Name": "Dr. Vivian O. Rodriguez, MD", "Specialty": "Endocrinology/IM", "Practice Name": "Private Clinic", "Address": "2201 W. Holcombe Blvd., Ste. 245, Houston, TX 77030", "Contact": "713-796-1188", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Talked with receptionist about clinical research/delivered marketing material - will follow up on Mon. 4/6/2026", "id": 25}, {"Outreach Date": "", "Doctor Name": "Multiple", "Specialty": "Gastroenterology", "Practice Name": "Digestive Health Associates", "Address": "929 Gessner Rd, Suite 1360, Houston, TX 77024", "Contact": "713-468-2030", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "", "id": 26}, {"Outreach Date": "", "Doctor Name": "Multiple", "Specialty": "Gastroenterology", "Practice Name": "Houston Gastro Institute", "Address": "25230 Kingsland Blvd, Suite 101, Katy, TX 77494", "Contact": "281-746-9284", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Send email to clinic@drasamoah.com", "id": 27}, {"Outreach Date": "", "Doctor Name": "Dr. Reddy, Dr. Hamat + team", "Specialty": "Gastroenterology", "Practice Name": "Digestive & Liver Disease Consultants PA", "Address": "275 Lantern Bend Dr, Suite 200, Houston, TX 77090", "Contact": "281-440-0101", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 28}, {"Outreach Date": "", "Doctor Name": "Dr. Nat Bala + team", "Specialty": "Gastroenterology", "Practice Name": "Gastroenterology Consultants", "Address": "444 FM 1959, Suite A, Houston, TX 77034", "Contact": "281-481-9400", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "", "id": 29}, {"Outreach Date": "", "Doctor Name": "George Fakhre, MD", "Specialty": "Internal Medicine", "Practice Name": "Personal Practice", "Address": "319 N Hood St, Lake Providence, LA 71254", "Contact": "318-559-1221", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 30}, {"Outreach Date": "", "Doctor Name": "Dr. M. Khawaja, Dr. A. Khawaja", "Specialty": "Internal Medicine", "Practice Name": "CareOne Internal Medicine", "Address": "2222 Greenhouse Rd, Suite 400, Houston, TX 77084", "Contact": "281-201-1032", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 31}, {"Outreach Date": "", "Doctor Name": "Multiple", "Specialty": "Internal Medicine", "Practice Name": "Houston Internal Medicine Associates PA", "Address": "21336 Provinicial blvd, Katy, TX 77450", "Contact": "281-809-0085", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 32}, {"Outreach Date": "", "Doctor Name": "Multiple", "Specialty": "Internal Medicine", "Practice Name": "Premier NW Houston Medical Group", "Address": "7025 Fry Rd, Suite 500, Cypress, TX 77433", "Contact": "281-758-1022", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 33}, {"Outreach Date": "4/2/2026", "Doctor Name": "Hoonmmo L. Koo, MD", "Specialty": "Inpatient Infectious Disease", "Practice Name": "Inpatient Infectious Disease Consultants", "Address": "2201 W. Holcombe Blvd., Ste. 305, Houston, TX 77030", "Contact": "713-791-1020", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Dropped off marketing materials, will follow up with receptionsit on if Dr. Koo is interested.", "id": 34}, {"Outreach Date": "10/16/2025", "Doctor Name": "Vijay Koka, MD", "Specialty": "Nephrology", "Practice Name": "Renal Specialists of Houston", "Address": "", "Contact": "vkoka@renalspecialists.com", "Status": "Completed", "Outreach Type": "Email", "Notes": "Dr. Koka replied on 10/20 with just wanting to refer pt with fsgs, awaiting response from pt if interested.", "id": 35}, {"Outreach Date": "10/20/2025", "Doctor Name": "Roohi Khan, MD", "Specialty": "Nephrology", "Practice Name": "Kelsey-Seybold Clinic", "Address": "", "Contact": "+1(304)610-3659", "Status": "Completed", "Outreach Type": "Whatsapp Message", "Notes": "awaiting response", "id": 36}, {"Outreach Date": "10/20/2025", "Doctor Name": "Dr. Shrikanth Raayasa", "Specialty": "Nephrology", "Practice Name": "Kingwood practice", "Address": "", "Contact": "N/A (ask Dr. Mandayam)", "Status": "First Meeting Scheduled", "Outreach Type": "Clinic Visit", "Notes": "LOI sent, sent email on 10/28 asking for availability for site visit.Site visit on 11/5, need to follow up.", "id": 37}, {"Outreach Date": "10/20/2025", "Doctor Name": "Dr. Mohan Rathi", "Specialty": "Nephrology", "Practice Name": "Kingwood practice", "Address": "", "Contact": "N/A (ask Dr. Mandayam)", "Status": "First Meeting Scheduled", "Outreach Type": "Clinic Visit", "Notes": "LOI sent, sent email on 10/28 asking for availability for site visit. Site visit on 11/5, need to follow up.", "id": 38}, {"Outreach Date": "10/28/2025", "Doctor Name": "Raul Mulpuri", "Specialty": "Nephrology", "Practice Name": "N/A (ask Sameer)", "Address": "200S Rivershire Dr", "Contact": "N/A (ask Sameer)", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "will follow up to remind him to provide numbers of potential pts.", "id": 39}, {"Outreach Date": "11/6/2025", "Doctor Name": "Rupal Patel MD", "Specialty": "Nephrology", "Practice Name": "", "Address": "", "Contact": "patel@khcmed.com, 832-721-2927", "Status": "Completed", "Outreach Type": "Email", "Notes": "Emailed Dr. Patel asking availability for next week after he expressed interest in collaborating, organizing meeting time currently. Meeting did occur. Waiting response from their team on collaboration structure.", "id": 40}, {"Outreach Date": "11/21/2025", "Doctor Name": "Suleiman Daifallah, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Address": "1295 E 151st St #7, Olathe, KS 66062", "Contact": "913-381-0622", "Status": "Completed", "Outreach Type": "Call", "Notes": "Talked with receptionist - Dr. not in office until first week of december, but passed along information. Will follow up first week of Dec.", "id": 41}, {"Outreach Date": "", "Doctor Name": "Connie Roe, NP", "Specialty": "Nephrology", "Practice Name": "Nephrology Associates (Kidney Care Specialists)", "Address": "9501 State Avenue, Suite 1, Kansas City, KS 66111", "Contact": "913-441-5757", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 42}, {"Outreach Date": "11/21/2025", "Doctor Name": "Ellen T McCarthy, MD", "Specialty": "Nephrology", "Practice Name": "University of Kansas Hospital System", "Address": "3901 Rainbow Blvd, Kansas City, KS 66160", "Contact": "913-588-5000", "Status": "Completed", "Outreach Type": "Email", "Notes": "Talked with receptionist - will forward information to hholferty@kumc.edu so Dr. can look at info to see whether to move forward or not. 11/28/25: followed up via email.", "id": 43}, {"Outreach Date": "", "Doctor Name": "Heather Conklin, NP", "Specialty": "Nephrology", "Practice Name": "Nepohrology Associates (Kidney Care Specialists)", "Address": "8901 W 74th St Suite 328, Shawnee, KS 66204", "Contact": "", "Status": "", "Outreach Type": "", "Notes": "", "id": 44}, {"Outreach Date": "11/21/2025", "Doctor Name": "Tarek Darwish, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Address": "11661 College Blvd, Overland Park, KS 66210", "Contact": "(913) 495-5517", "Status": "Completed", "Outreach Type": "Email", "Notes": "Talked with receptionist - Dr. not in office, but will forward information to drdarwish@kskidney.com. 11/28/25: Followed up via email.", "id": 45}, {"Outreach Date": "11/21/2025", "Doctor Name": "Brian S. Pavey, DO", "Specialty": "Nephrology", "Practice Name": "Mowery Clinic Main", "Address": "737 E. Crawford, Salina, KS 67401", "Contact": "785-827-7261", "Status": "Need to Follow Up", "Outreach Type": "Call", "Notes": "Phone operating hours are 8am-5pm Mon-Thurs and 8am-noon on Fri. Called past noon on friday, so will reach back out next week.", "id": 46}, {"Outreach Date": "11/21/2025", "Doctor Name": "Henry S. Reed, MD", "Specialty": "Nephrology", "Practice Name": "Mowery Clinic Main", "Address": "737 E. Crawford, Salina, KS 67401", "Contact": "785-827-7261", "Status": "Need to Follow Up", "Outreach Type": "Call", "Notes": "Phone operating hours are 8am-5pm Mon-Thurs and 8am-noon on Fri. Called past noon on friday, so will reach back out next week.", "id": 47}, {"Outreach Date": "11/21/2025", "Doctor Name": "Akshey K. Gupta, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Address": "300 W St Mary Blvd, Lafayette, LA 70506", "Contact": "(337) 233-6593", "Status": "Need to Follow Up", "Outreach Type": "Call", "Notes": "Office was closed, but received fax number: 337-235-1032", "id": 48}, {"Outreach Date": "11/24/2025", "Doctor Name": "Michael Kuo-Tsun Liu, MD", "Specialty": "Nephrology", "Practice Name": "Kidney Consultants of Louisiana", "Address": "301 Alcide Domingue Drive, Lafayette, LA 70506", "Contact": "337-234-7123", "Status": "Completed", "Outreach Type": "Email", "Notes": "Dr. was not in, but left a message for the receptionist to give to him, and was given email: kidney.consultants@hotmail.com. 11/28/26: followed up via email.", "id": 49}, {"Outreach Date": "", "Doctor Name": "Yelena A. Magay, FNP", "Specialty": "Nephrology", "Practice Name": "Ochsner University Hospital & Clinics", "Address": "2390 W Congress St, Lafayette, LA 70506", "Contact": "(337) 261-6759", "Status": "Need to Follow Up", "Outreach Type": "Call", "Notes": "Dr. was not in, but left a message for the receptionist.", "id": 50}, {"Outreach Date": "", "Doctor Name": "Rana El Sabbagh, MD", "Specialty": "Nephrology", "Practice Name": "Iberia Medical Center", "Address": "2308 E. Main Street Suite E New Iberia, LA 70560", "Contact": "337-374-7156", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 51}, {"Outreach Date": "", "Doctor Name": "Pallavi Shirsat, MD", "Specialty": "Nephrology", "Practice Name": "Minden Nephrology & Hypertension", "Address": "#2 Medical Plaza Minden, LA 71055", "Contact": "318-382-7290", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 52}, {"Outreach Date": "", "Doctor Name": "Rajat Gulati, MD", "Specialty": "Nephrology", "Practice Name": "Kidney Care of Louisiana", "Address": "201 4th St suite 5A, Alexandria, LA 71301", "Contact": "318-483-1961", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 53}, {"Outreach Date": "", "Doctor Name": "Goutham Talluri, MD", "Specialty": "Nephrology", "Practice Name": "Kidney Care of Louisiana", "Address": "201 4th Street, Suite 5A, Alexandria, LA 71301", "Contact": "318-483-1961", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 54}, {"Outreach Date": "", "Doctor Name": "Jocelyne A. Saikali, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Address": "506 S 6th St, Leesville, LA 71446", "Contact": "337-509-4005", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 55}, {"Outreach Date": "", "Doctor Name": "Sholer Chris, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Address": "2201 N Glade Ave a, Bethany, OK 73008", "Contact": "405-842-8298", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 56}, {"Outreach Date": "", "Doctor Name": "Zahid B. Ahmad, MD", "Specialty": "Nephrology", "Practice Name": "OUHSC", "Address": "825 NE 10th St #4E, Oklahoma City, OK 73104", "Contact": "405-271-3445", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 57}, {"Outreach Date": "", "Doctor Name": "Benjamin D. Cowley, MD, FACP, FASN", "Specialty": "Nephrology", "Practice Name": "OUHSC", "Address": "825 NE 10th St #4E, Oklahoma City, OK 73104", "Contact": "405-271-3445", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 58}, {"Outreach Date": "", "Doctor Name": "Kirolos Iskander, MD", "Specialty": "Nephrology", "Practice Name": "OUHSC", "Address": "1000 NE 13th St #1g, Oklahoma City, OK 73104", "Contact": "405-271-3445", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 59}, {"Outreach Date": "", "Doctor Name": "Shehzad Bandhani, MD", "Specialty": "Nephrology", "Practice Name": "Medical Clinic in OKC", "Address": "3366 Northwest Expy #550, Oklahoma City, OK 73112", "Contact": "405-942-5442", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 60}, {"Outreach Date": "", "Doctor Name": "Gary D. Bond, MD", "Specialty": "Nephrology", "Practice Name": "Medical Clinic in OKC", "Address": "3366 Northwest Expy #550, Oklahoma City, OK 73112", "Contact": "405-942-5442", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 61}, {"Outreach Date": "", "Doctor Name": "Dr. Spencer Su, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Address": "7500 Beechnut St #262, Houston, TX 77074", "Contact": "832-767-1091", "Status": "Completed", "Outreach Type": "Call", "Notes": "Planned a Lunch and Learn with Dr. Su's office (other 2 nephros) on Jan 14th", "id": 62}, {"Outreach Date": "", "Doctor Name": "Dr. Shahzeb Naqvi, MD", "Specialty": "Nephrology", "Practice Name": "Save Kidney", "Address": "150 Pine Forest Dr Ste 102, Shenandoah, TX 77384", "Contact": "832-813-8074", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Up to Date: Dr. Naqvi has signed service agreement with Prolato and referred 1 pt.", "id": 63}, {"Outreach Date": "", "Doctor Name": "Dr. Lazaro Cherem, MD", "Specialty": "Nephrology", "Practice Name": "Lazaro Cherem MD", "Address": "7015 Almeda Rd, Houston, TX 77054", "Contact": "(713) 799-2900", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 64}, {"Outreach Date": "", "Doctor Name": "Dr. Uday Khosla, MD", "Specialty": "Nephrology", "Practice Name": "Uday Khosla MD - Nephrologist", "Address": "1724 Richmond Ave. Suite 100B, Houston, TX 77098", "Contact": "(713) 352-0903", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 65}, {"Outreach Date": "Already visited Dr. Spencer's office in past", "Doctor Name": "Founder physician", "Specialty": "Nephrology", "Practice Name": "Integrative Nephrology of Houston", "Address": "7500 Beechnut St #262, Houston, TX 77074", "Contact": "832-767-1091", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 66}, {"Outreach Date": "Already visited Dr. Spencer's office in past", "Doctor Name": "Dr. Jung, Dr. Luong, Dr. Sahai, Dr. Su, Dr. Tambra + more", "Specialty": "Nephrology", "Practice Name": "Integrated Nephrology of Houston", "Address": "7500 Beechnut St #262, Houston, TX 77074", "Contact": "832-767-1091", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 67}, {"Outreach Date": "4/9/2026", "Doctor Name": "Dr. Prakash", "Specialty": "Nephrology", "Practice Name": "Renal Clinic of Houston", "Address": "902 Frostwood #245, Professional BLDG 1, Houston, TX 77024", "Contact": "713-464-9100", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Lunch and Learn completed on 4/17/2026 - need to followup", "id": 68}, {"Outreach Date": "", "Doctor Name": "Dr. Bernardo, Dr. Khan, Dr. Brink", "Specialty": "Nephrology", "Practice Name": "Southwest Nephrology Associates", "Address": "7777 Southwest Fwy suite 304, Houston, TX 77074", "Contact": "713-270-4545", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 69}, {"Outreach Date": "", "Doctor Name": "Dr. Varghese", "Specialty": "Nephrology", "Practice Name": "Diagnostic & Interventional Nephrology", "Address": "1200 Binz Street, Suite 1110, Houston, TX 77044", "Contact": "713-987-4006", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 70}, {"Outreach Date": "4/9/2026", "Doctor Name": "Multiple", "Specialty": "Nephrology", "Practice Name": "Houston Renal Group", "Address": "2201 W Holcoimbe Blvd, Suite 320, Houston, TX 77030", "Contact": "346-570-1700", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Dropped off marketing materials - will follow up with receptionist", "id": 71}, {"Outreach Date": "10/30/2025", "Doctor Name": "Marializa V. Bernardo, MD", "Specialty": "Nephrology", "Practice Name": "Southwest Nephrology Associates LLP", "Address": "7777 Southwest Fwy suite 304, Houston, TX 77074", "Contact": "(713) 270-4545", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "There was an attempt to reach out, but since it was inside a memorial herman hospital. Also there was no receptionist at the front desk", "id": 72}, {"Outreach Date": "10/30/2025", "Doctor Name": "Caleb Chen, MD", "Specialty": "Nephrology", "Practice Name": "Southwest Nephrology Associates LLP", "Address": "7777 Southwest Fwy suite 304, Houston, TX 77074", "Contact": "(713) 270-4545", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "There was an attempt to reach out, but since it was inside a memorial herman hospital. Also there was no receptionist at the front desk", "id": 73}, {"Outreach Date": "11/20/2025", "Doctor Name": "Andres H Keichian, MD", "Specialty": "Nephrology", "Practice Name": "Personal Office (Nephrology)", "Address": "3003 S Loop W, Houston, TX 77054", "Contact": "Keichian@AHKNeurology.com", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Delivered the Pamphlet and gave our contact detail; will follow up with receptionist Rose and email dr saying we have worked together before, give list of trials, ways he can participate, and set up a meet. 11/21/2025 sent email with prolato information. 11/25/2025 sent followup email asking to meet.", "id": 74}, {"Outreach Date": "12/9/2025", "Doctor Name": "June Yao, MD", "Specialty": "Nephrology", "Practice Name": "Renal Specialists of Houston", "Address": "1213 Herman Dr Ste 540, Houston TX 77004", "Contact": "", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 75}, {"Outreach Date": "12/9/2025", "Doctor Name": "Han Dang, MD", "Specialty": "Nephrology", "Practice Name": "Global Kidney Center PLLC", "Address": "2525 N Loop W Suite 600, Houston TX 77008", "Contact": "", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Visited office with Humaira and dropped off NefXtend materials. Office will contact us if their nephrologists are interested in participating in research. Followed up on 12/12 and Anika Porter (their practice administrator) and they stated not interested - they have their own research center. Explained the trial and benefits, but still not interested.", "id": 76}, {"Outreach Date": "12/9/2025", "Doctor Name": "Thang Nguyen, MD", "Specialty": "Nephrology", "Practice Name": "Global Kidney Center PLLC", "Address": "2525 N Loop W Suite 600, Houston TX 77008", "Contact": "", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Visited office with Humaira and dropped off NefXtend materials. Office will contact us if their nephrologists are interested in participating in research. Followed up on 12/12 and Anika Porter (their practice administrator) and they stated not interested - they have their own research center. Explained the trial and benefits, but still not interested.", "id": 77}, {"Outreach Date": "12/9/2025", "Doctor Name": "Nguyen Thu, MD", "Specialty": "Nephrology", "Practice Name": "Global Kidney Center PLLC", "Address": "2525 N Loop W Suite 600, Houston TX 77008", "Contact": "", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Visited office with Humaira and dropped off NefXtend materials. Office will contact us if their nephrologists are interested in participating in research. Followed up on 12/12 and Anika Porter (their practice administrator) and they stated not interested - they have their own research center. Explained the trial and benefits, but still not interested.", "id": 78}, {"Outreach Date": "12/9/2025", "Doctor Name": "Washington Sereatan, MD", "Specialty": "Nephrology", "Practice Name": "Global Kidney Center PLLC", "Address": "2525 N Loop W Suite 600, Houston TX 77008", "Contact": "", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Visited office with Humaira and dropped off NefXtend materials. Office will contact us if their nephrologists are interested in participating in research. Followed up on 12/12 and Anika Porter (their practice administrator) and they stated not interested - they have their own research center. Explained the trial and benefits, but still not interested. .", "id": 79}, {"Outreach Date": "12/9/2025", "Doctor Name": "Kim Horn, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Address": "1415 North Loop West Suite 105, Houston TX 77008", "Contact": "", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Visited office with Humaira and dropped off NefXtend materials. Office will contact us if Dr. Horn is interested. Not sure if they have Tarpeyo pts. Followed up on 12/12 with a call and front desk said she will leave our folder on Dr. Horn's desk with note to reply if she wants us to come in and explain the trial to her. Will followup the week of 12/14.", "id": 80}, {"Outreach Date": "", "Doctor Name": "Adil Au, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Address": "915 Gressler, Houston TX 77024", "Contact": "", "Status": "Pending", "Outreach Type": "", "Notes": "Reach out for NefXtend study", "id": 81}, {"Outreach Date": "", "Doctor Name": "Vijayaprakash Sreenarasimhaiah, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Address": "915 Gressler, Houston TX 77024", "Contact": "", "Status": "Pending", "Outreach Type": "", "Notes": "Reach out for NefXtend study", "id": 82}, {"Outreach Date": "12/9/2025", "Doctor Name": "Jinwoo Jung, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Address": "7500 Beechnut St ste 262, Houston TX 77074", "Contact": "", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Same office as Dr. Spencer Su - received Michelle's (manager) cell number and tentatively scheduled a meeting Jan 14. Will reachout and confirm lunch and learn with the nephrologists.", "id": 83}, {"Outreach Date": "12/3/2025", "Doctor Name": "Syed Kadri, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Address": "607 Timberdale Lane, Suite 201", "Contact": "", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Visited office with Humaira and dropped off PCRC materials, front desk requested we call next week to ask their status on whether they want to move forward or not. Will follow up week of 12/7.", "id": 84}, {"Outreach Date": "", "Doctor Name": "Madhavilatha Vuppali, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Address": "200 S. Rivershire Dr ste 300", "Contact": "", "Status": "Pending", "Outreach Type": "", "Notes": "Reach out for NefXtend study", "id": 85}, {"Outreach Date": "", "Doctor Name": "Anthony Hanson, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Address": "19502 Mckay Dr", "Contact": "", "Status": "Pending", "Outreach Type": "", "Notes": "Reach out for NefXtend study", "id": 86}, {"Outreach Date": "12/3/2025", "Doctor Name": "Adam Frome, MD", "Specialty": "Nephrology", "Practice Name": "Kidney Specialists of North Houston", "Address": "129 Vision Park #109", "Contact": "", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Visited office with Humaira and dropped off PCRC materials, but front desk stated they work with Davita research already.", "id": 87}, {"Outreach Date": "12/3/2025", "Doctor Name": "Syed Zaidi, MD", "Specialty": "Nephrology", "Practice Name": "Kidney Specialists of North Houston", "Address": "129 Vision Park #109", "Contact": "", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Visited office with Humaira and dropped off PCRC materials, but front desk stated they work with Davita research already.", "id": 88}, {"Outreach Date": "", "Doctor Name": "Harini Bejjanki, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Address": "17191 St. Luke's Way Ste 260", "Contact": "", "Status": "Pending", "Outreach Type": "", "Notes": "Reach out for NefXtend study", "id": 89}, {"Outreach Date": "12/3/2025", "Doctor Name": "Djas Naik, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Address": "129 Vision Park #109", "Contact": "", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Visited office with Humaira and dropped off PCRC materials, but front desk stated they work with Davita research already.", "id": 90}, {"Outreach Date": "12/3/2025", "Doctor Name": "Shahzeb Naqvi, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Address": "150 Pine Forest Drive Suite 102", "Contact": "", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Visited office with Humaira and met/discussed with Dr. Naqvi details of the NefXtend trial - as of 12/4/25, he is connected with Zohra for service agreement details, awaiting response. Followed up via call on 12/9 and phone operator stated office was closed that day. Will follow up on 12/10.", "id": 91}, {"Outreach Date": "", "Doctor Name": "Archana Goel, MD", "Specialty": "Nephrology", "Practice Name": "Nephrology Associates (Kidney Care Specialists)", "Address": "9501 State Avenue, Suite 1, Kansas City, KS 66111", "Contact": "913-441-5757", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 92}, {"Outreach Date": "", "Doctor Name": "Multiple", "Specialty": "Nephrology", "Practice Name": "Almeda Clinic - Greater Houston Kidney Specialists", "Address": "7015 Almeda Rd, Houston, TX 77054", "Contact": "Jeanettet@boson360.com", "Status": "", "Outreach Type": "", "Notes": "Visited office and shared pamphlets with both sides of the clinic - Dr. Ralph Ronald + Greater Houston Kidney Specialist. Followed up via email on 6/25.", "id": 93}, {"Outreach Date": "5/14/2026", "Doctor Name": "Dr. Vanderlick, Dr. Irr + team", "Specialty": "Neurology", "Practice Name": "Neurology Consultants of Houston", "Address": "6700 W Loop S, #400, Bellaire, TX 77401", "Contact": "713-795-4785", "Status": "Pending", "Outreach Type": "", "Notes": "closest (by Wajeeha)", "id": 94}, {"Outreach Date": "5/14/2026", "Doctor Name": "Dr. Kathleen Eberle + team", "Specialty": "Neurology", "Practice Name": "Houston Neurological Institute", "Address": "10905 Memorial Hermann Dr #115, Pearland, TX 77584", "Contact": "281-922-7222", "Status": "Pending", "Outreach Type": "", "Notes": "Pearland (south 15 min)", "id": 95}, {"Outreach Date": "5/14/2026", "Doctor Name": "Dr. Madhureeta Achari", "Specialty": "Neurology", "Practice Name": "Integrated Neurology", "Address": "1411 Heights Blvd, Houston, TX 77008", "Contact": "832-793-7530", "Status": "Pending", "Outreach Type": "", "Notes": "North (23 min)", "id": 96}, {"Outreach Date": "5/14/2026", "Doctor Name": "Multiple", "Specialty": "Neurology", "Practice Name": "The Neurology Center", "Address": "6655 Travis St, Suite 600, Houston, TX 77030", "Contact": "713-795-0074", "Status": "Pending", "Outreach Type": "", "Notes": "Medical Center (max 8 min) - theres also a dermatologist in the same building (ask around for future trials!)", "id": 97}, {"Outreach Date": "11/21/2025", "Doctor Name": "Patricia L Gutowski, NP", "Specialty": "Nurse Practitioner", "Practice Name": "", "Address": "1133 College Ave Ste B, Manhattan, KS 66502", "Contact": "+1 785-565-9500", "Status": "Completed", "Outreach Type": "Email", "Notes": "Talked to operator and will forward our infomation to drbedros@fhdks.com, Dr. Bedros is their medical director. 11/28/25: Followed up via email.", "id": 98}, {"Outreach Date": "12/4/2025", "Doctor Name": "Ajay Aggarwal, MD", "Specialty": "Pain Management", "Practice Name": "Personal Practice (pain management physician)", "Address": "2010 Naomi St A, Houston, TX 77054", "Contact": "17136637246", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Dr. Aggarwal\u0092s primary contact is Jenny, the office administrator, whose email and phone number we have on file. Dr. Aggarwal does not currently have any research affiliations and is typically in the office on Saturdays, with varying weekday availability. contact number # (713)663-7246. email: officegroup@backpain2020.com", "id": 99}, {"Outreach Date": "12/4/2025", "Doctor Name": "Shahnaz A. Karim, MD", "Specialty": "Pain Management", "Practice Name": "Personal Practice (pain management physician)", "Address": "10019 S Main St suite a-1, Houston, TX 77025", "Contact": "17136686000", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "office hours are 2:00 pm - 5:00 pm", "id": 100}, {"Outreach Date": "12/4/2025", "Doctor Name": "Pankaj Satija, MD", "Specialty": "Pain Management", "Practice Name": "Personal Practice (pain management physician)", "Address": "1313 La Concha Ln, Houston, TX 77054", "Contact": "18328317800", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "For Dr. Satija, we have his phone number on file; however, direct contact has not been possible, and all communication should be routed through his office administrator via call or email. (832)-831-7800 . email: info@4saimanagement.com", "id": 101}, {"Outreach Date": "12/4/2025", "Doctor Name": "Sara Goel, DO", "Specialty": "Pain Management", "Practice Name": "Personal Practice (pain management physician)", "Address": "7700 Main St Suite 400, Houston, TX 77030", "Contact": "13462304070", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "unable to meet. closed for the holidays", "id": 102}, {"Outreach Date": "12/4/2025", "Doctor Name": "Hui Kang, MD", "Specialty": "Pain Management", "Practice Name": "Houston Pain Specialists", "Address": "5420 Dashwood Dr # 103, Houston, TX 77081", "Contact": "17136642662", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "unable to meet. closed for the holidays", "id": 103}, {"Outreach Date": "12/4/2025", "Doctor Name": "Asif Chaudhry, MD", "Specialty": "Pain Management", "Practice Name": "Houston Pain and Spine", "Address": "2100 W Loop S #400, Houston, TX 77027", "Contact": "18324364040", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "unable to meet", "id": 104}, {"Outreach Date": "12/4/2025", "Doctor Name": "Dr. Choudri, MD", "Specialty": "Pain Management", "Practice Name": "Greater Houston Interventional Pain Management Associates", "Address": "4747 Bellaire Blvd #101, Bellaire, TX 77401", "Contact": "17136221700", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Dr. Mobeen is only available on Tuesdays. has 3 other locations. email contact: Mchoudri@ghpain.com", "id": 105}, {"Outreach Date": "", "Doctor Name": "Dr. Montero-Baker + team", "Specialty": "Podiatry", "Practice Name": "HOPE Vascular & Podiatry", "Address": "7501 Fannin St, Suite 600 & 650, Houston, TX 77054", "Contact": "346-400-46763", "Status": "", "Outreach Type": "", "Notes": "", "id": 106}, {"Outreach Date": "", "Doctor Name": "Multiple", "Specialty": "Podiatry", "Practice Name": "Home WoundCare Center", "Address": "ERROR: INTERNAL SERVER ERROR 500", "Contact": "346-494-8274", "Status": "", "Outreach Type": "", "Notes": "", "id": 107}, {"Outreach Date": "", "Doctor Name": "Multiple", "Specialty": "Podiatry", "Practice Name": "Vital Podiatry", "Address": "13636 Breton Ridge St, Suite D, Houston, TX 77070", "Contact": "281-937-4546", "Status": "", "Outreach Type": "", "Notes": "", "id": 108}, {"Outreach Date": "", "Doctor Name": "Multiple", "Specialty": "Podiatry", "Practice Name": "Westside Podiatry", "Address": "13114 FM 1960 Rd, Suite 100, Houston, TX 77065", "Contact": "281-859-6100", "Status": "", "Outreach Type": "", "Notes": "", "id": 109}, {"Outreach Date": "", "Doctor Name": "Dr. Leisten, Dr. Haase", "Specialty": "Podiatry", "Practice Name": "Diagnostic Foot Specialists", "Address": "1631 North Loop West, Suite 470, Houston, TX 77008", "Contact": "713-862-3338", "Status": "", "Outreach Type": "", "Notes": "", "id": 110}, {"Outreach Date": "9/22/2025", "Doctor Name": "Bao Nguyen", "Specialty": "Rheumatology", "Practice Name": "Houston Comprehensive Rheumatology", "Address": "9717 Jones Rd Suite 200, Houston, TX 77065", "Contact": "info@houstoncomprehensiverheumatology.com", "Status": "Completed", "Outreach Type": "Email", "Notes": "", "id": 111}, {"Outreach Date": "9/22/2025", "Doctor Name": "Dr. Khawari", "Specialty": "Rheumatology", "Practice Name": "Rheumatology Associates Houston", "Address": "777 S Fry Rd Suite 208, Katy, TX 77450", "Contact": "appointment@rheumatologyassociateshouston.com", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Delivered the Pamphlet and a Donut Box. they are already working with a clinical research site.", "id": 112}, {"Outreach Date": "9/22/2025", "Doctor Name": "Seema Malani", "Specialty": "Rheumatology", "Practice Name": "Arthritis Clinic of Katy", "Address": "", "Contact": "contact@arthritisclinicofkaty.com", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Delivered the Pamphlet and a Donut Box. they are already working with a clinical research site.", "id": 113}, {"Outreach Date": "9/23/2025", "Doctor Name": "Dr. Aman Kyugasia", "Specialty": "Rheumatology", "Practice Name": "Arthritis Clinic of Katy", "Address": "", "Contact": "contact@arthritisclinicofkaty.com", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Delivered the Pamphlet and a Donut Box. they are already working with a clinical research site.", "id": 114}, {"Outreach Date": "9/30/2025", "Doctor Name": "Amber khan", "Specialty": "Rheumatology", "Practice Name": "Houston Rheumatology Institute", "Address": "2222 Greenhouse Rd Bldg #1300, Houston, TX 77084", "Contact": "info@hrihealth.com", "Status": "Completed", "Outreach Type": "Email", "Notes": "", "id": 115}, {"Outreach Date": "9/30/2025", "Doctor Name": "Ramona Mihu, MD", "Specialty": "Rheumatology", "Practice Name": "Heights Rheumatology P.A.", "Address": "", "Contact": "rmihu@heightsrheumatology.com", "Status": "Completed", "Outreach Type": "Email", "Notes": "", "id": 116}, {"Outreach Date": "9/30/2025", "Doctor Name": "Dr. Hernandez", "Specialty": "Rheumatology", "Practice Name": "Fort Bend Rheumatology Associates", "Address": "7616 Branford Place suite 320, sugarland texas", "Contact": "johnlong@fbratx.com", "Status": "Completed", "Outreach Type": "Email", "Notes": "incorrect email", "id": 117}, {"Outreach Date": "9/30/2025", "Doctor Name": "Sean Menga, MD", "Specialty": "Rheumatology", "Practice Name": "Primer Rheumatology (The Woodlands)", "Address": "", "Contact": "info@primerheumatology.com", "Status": "Completed", "Outreach Type": "Email", "Notes": "", "id": 118}, {"Outreach Date": "9/30/2025", "Doctor Name": "Pavan Bachireddy, MD", "Specialty": "Rheumatology", "Practice Name": "Rheumatology Clinic of Houston (Tomball)", "Address": "", "Contact": "pb@houstonrheumatology.com", "Status": "Completed", "Outreach Type": "Email", "Notes": "", "id": 119}, {"Outreach Date": "9/30/2025", "Doctor Name": "Tamar F. Brionez, MD", "Specialty": "Rheumatology", "Practice Name": "Advanced Rheumatology of Houston", "Address": "10857 Kuykendahl Rd Suite 120, The Woodlands, TX 77382", "Contact": "info@advancedrheum.com", "Status": "Completed", "Outreach Type": "Email", "Notes": "", "id": 120}, {"Outreach Date": "10/8/2025", "Doctor Name": "Wajeeha Yousaf", "Specialty": "Rheumatology", "Practice Name": "Rheumatology Care Center", "Address": "", "Contact": "info@rccbellaire.com", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Signed Service Agreement with us.", "id": 121}, {"Outreach Date": "10/21/2025", "Doctor Name": "Dr. Hema Salvady", "Specialty": "Rheumatology", "Practice Name": "Texas Rheumatology", "Address": "3725 E League City Pkwy Suite 200, League City, TX 77573 / 4427 Crenshaw Rd Suite 100, Pasadena, TX 77504", "Contact": "281-957-9127", "Status": "Completed", "Outreach Type": "Call", "Notes": "left a voicemail", "id": 122}, {"Outreach Date": "10/21/2025", "Doctor Name": "Dr. Prashant Sunkureddi", "Specialty": "Rheumatology", "Practice Name": "Texas Rheumatology", "Address": "3725 E League City Pkwy Suite 200, League City, TX 77573 / 4427 Crenshaw Rd Suite 100, Pasadena, TX 77504", "Contact": "281-957-9127", "Status": "Completed", "Outreach Type": "Call", "Notes": "left a voicemail", "id": 123}, {"Outreach Date": "10/21/2025", "Doctor Name": "Dr. Tara J. Rizvi", "Specialty": "Rheumatology", "Practice Name": "Texas Arthritis & Rheumatology Associates", "Address": "714 S Peek Road, Katy, TX 77450", "Contact": "346-257-4300", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Delivered the Pamphlet and a Donut Box. She was busy with her patients we got the main contact for her front desk person: Jesus. 346-257-4300.", "id": 124}, {"Outreach Date": "10/21/2025", "Doctor Name": "Dr. S. Arif Ali", "Specialty": "Rheumatology", "Practice Name": "Northwest Houston Arthritis Center", "Address": "17045 St. Edwards Drive Ste 110, Houston, TX 77070 / 455 School St., Suite 27, Tomball, TX 77375", "Contact": "281-397-9198", "Status": "Completed", "Outreach Type": "Call", "Notes": "failed attempt", "id": 125}, {"Outreach Date": "10/21/2025", "Doctor Name": "Dr. Adnan Peer", "Specialty": "Rheumatology", "Practice Name": "Northwest Houston Arthritis Center", "Address": "17045 St. Edwards Drive Ste 110, Houston, TX 77070 / 455 School St., Suite 27, Tomball, TX 77375", "Contact": "281-397-9198", "Status": "Completed", "Outreach Type": "Call", "Notes": "failed attempt", "id": 126}, {"Outreach Date": "10/21/2025", "Doctor Name": "Dr. Iqtidar Hanif", "Specialty": "Rheumatology", "Practice Name": "Northwest Houston Arthritis Center", "Address": "17045 St. Edwards Drive Ste 110, Houston, TX 77070 / 455 School St., Suite 27, Tomball, TX 77375", "Contact": "281-397-9198", "Status": "Completed", "Outreach Type": "Call", "Notes": "failed attempt", "id": 127}, {"Outreach Date": "10/21/2025", "Doctor Name": "Dr. Qaiser Rehman", "Specialty": "Rheumatology", "Practice Name": "Rheumatology Clinic of Houston", "Address": "17134 North Eldridge Parkway Suite A, Tomball, TX 77377", "Contact": "832-237-8585", "Status": "Completed", "Outreach Type": "Call", "Notes": "left a voicemail", "id": 128}, {"Outreach Date": "", "Doctor Name": "Dr. Leila Muhieddine", "Specialty": "Rheumatology", "Practice Name": "Namieta Janssen MD PLLC", "Address": "1327 Lake Pointe Pkwy Suite 325, Sugar Land, TX 77478", "Contact": "832-500-5002", "Status": "", "Outreach Type": "", "Notes": "", "id": 129}, {"Outreach Date": "", "Doctor Name": "Dr. Namieta Janssen", "Specialty": "Rheumatology", "Practice Name": "Namieta Janssen MD PLLC", "Address": "1327 Lake Pointe Pkwy Suite 325, Sugar Land, TX 77478", "Contact": "832-500-5002", "Status": "", "Outreach Type": "", "Notes": "", "id": 130}, {"Outreach Date": "10/30/2025", "Doctor Name": "Sabeen Najam MD", "Specialty": "Rheumatology", "Practice Name": "Houston Rheumatology Center", "Address": "7102 Tarrington Ave #103, Sugarland, tx, 77479", "Contact": "281-422-7179, snajam@hrcclinic.com", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Delivered the Pamphlet and a Donut Box. She is out bof office till Nov 10th. Office times Mondays (9 am-4 pm). research site in Baytown. Email for outreach: snajam@hrcclinic.com. 11/28/25: Followed up via email.", "id": 131}, {"Outreach Date": "11/10/2025", "Doctor Name": "S. Jeffrey Cannella, MD", "Specialty": "Rheumatology", "Practice Name": "Space City Pain", "Address": "17448 Highway 3, Suite 136, Webster, TX 77598", "Contact": "", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Connection via Dr. Eisenberg.", "id": 132}, {"Outreach Date": "11/18/2025", "Doctor Name": "Alfredo Sardinas Jr., MD", "Specialty": "Rheumatology", "Practice Name": "Personal Practice", "Address": "427 W 20th St Suite 220, Houston, TX 77008", "Contact": "", "Status": "Completed", "Outreach Type": "Call", "Notes": "Left a voicemail, assistant of dr. expressed Dr. Sardinas not interested - to check back in 6-8 months.", "id": 133}, {"Outreach Date": "11/18/2025", "Doctor Name": "Suong M Tran, MD", "Specialty": "Rheumatology", "Practice Name": "The Sunset Clinic", "Address": "Medical Clinic of Houston, LLP, aka \"The Sunset Clinic, 1701 Sunset Blvd 4th Floor, Houston, TX 77005", "Contact": "", "Status": "Completed", "Outreach Type": "Call", "Notes": "Left a voicemail - will plan to visit in morning for Thursday BD visit. --> Go to Physician Walk In Planner", "id": 134}, {"Outreach Date": "", "Doctor Name": "Dr. Qaiser Rehman", "Specialty": "Rheumatology", "Practice Name": "Rheumatology Clinic of Houston", "Address": "17134 N Eldridge Pkwy, Suite A, Tomball, TX 77377", "Contact": "832-979-5090", "Status": "", "Outreach Type": "", "Notes": "", "id": 135}, {"Outreach Date": "", "Doctor Name": "Dr. Chimata", "Specialty": "Rheumatology", "Practice Name": "Katy Rheumatology & Associates", "Address": "402 Park Grove Dr, Katy, TX 77450", "Contact": "281-941-6923", "Status": "", "Outreach Type": "", "Notes": "", "id": 136}, {"Outreach Date": "", "Doctor Name": "Dr. Bao Nguyen", "Specialty": "Rheumatology", "Practice Name": "Houston Comprehensive Rheumatology", "Address": "9717 Jones Rd, Suite 200, Houston, TX 77065", "Contact": "832-688-9463", "Status": "", "Outreach Type": "", "Notes": "", "id": 137}, {"Outreach Date": "", "Doctor Name": "Dr. Alikhan, Dr. Iversen, Dr. Tran", "Specialty": "Rheumatology", "Practice Name": "Medical Clinic of Houston (Rheum Div)", "Address": "1701 Sunset Blvd, Houston, TX 77005", "Contact": "713-526-5511", "Status": "", "Outreach Type": "", "Notes": "", "id": 138}, {"Outreach Date": "", "Doctor Name": "Dr. Tamar Brionez", "Specialty": "Rheumatology", "Practice Name": "Advanced Rheumatology of Houston", "Address": "10875 Kuykendahl Rd, Suite #120, The Woodlands, TX 77382", "Contact": "281-766-7886", "Status": "", "Outreach Type": "", "Notes": "", "id": 139}, {"Outreach Date": "10/30/2025", "Doctor Name": "J. Edward Hernandez, MD", "Specialty": "Rheumatology", "Practice Name": "Fort Bend Rheumatology Associates", "Address": "7616 Branford Place suite 320, sugarland texas", "Contact": "281-980-1742", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Delivered the Pamphlet and a Donut Box. They have a clinicial research site that was started this year . Doctors usually visit on Fridays. Main person to contact would be (John Long (COO) email: Johnlong@fbratx.com , contact : 281-980-1742 , fax 281-980-1754", "id": 140}, {"Outreach Date": "10/30/2025", "Doctor Name": "Nasha Nansey, MD", "Specialty": "Rheumatology", "Practice Name": "Fort Bend Rheumatology Associates", "Address": "7616 Branford Place suite 320, sugarland texas", "Contact": "281-980-1742", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Delivered the Pamphlet and a Donut Box. They have a clinicial research site that was started this year . Doctors usually visit on Fridays. Main person to contact would be (John Long) email: Johnlong@fbratx.com , contact : 281-980-1742 , fax 281-980-1755", "id": 141}, {"Outreach Date": "10/30/2025", "Doctor Name": "Ryan Valicek, MD", "Specialty": "Rheumatology", "Practice Name": "Fort Bend Rheumatology Associates", "Address": "7616 Branford Place suite 320, sugarland texas", "Contact": "281-980-1742", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Delivered the Pamphlet and a Donut Box. They have a clinicial research site that was started this year . Doctors usually visit on Fridays. Main person to contact would be (John Long) email: Johnlong@fbratx.com , contact : 281-980-1742 , fax 281-980-1756", "id": 142}, {"Outreach Date": "10/30/2025", "Doctor Name": "Sabeen Najam, MD", "Specialty": "Rheumatology", "Practice Name": "Houston Rheumatology Center", "Address": "7102 Tarrington Ave #103, Sugarland, tx, 77479", "Contact": "281-422-7179", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Delivered the Pamphlet and a Donut Box. She is out bof office till Nov 10th. Office times Mondays (9 am-4 pm). research site in Baytown. Email for outreach: snajam@hrcclinic.com", "id": 143}, {"Outreach Date": "11/6/2025", "Doctor Name": "Tara J Rizvi", "Specialty": "Rheumatology", "Practice Name": "Texas Arthritis & Rheumatology Associates", "Address": "714 South Peek Road, Katy, TX 77450", "Contact": "(346)-257- 4300", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Delivered the Pamphlet and a Donut Box. She was busy with her patients we got the main contact for her front desk person: Jesus. 346-257-4300.", "id": 144}, {"Outreach Date": "11/7/2025", "Doctor Name": "Abida Hassan", "Specialty": "Rheumatology", "Practice Name": "Texas Arthritis & Rheumatology Associates", "Address": "715 South Peek Road, Katy, TX 77450", "Contact": "(346)-257- 4301", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Delivered the Pamphlet and a Donut Box. She was busy with her patients we got the main contact for her front desk person: Jesus. 346-257-4300.", "id": 145}, {"Outreach Date": "11/6/2025", "Doctor Name": "Dr. Khawari", "Specialty": "Rheumatology", "Practice Name": "Rheumatology Associates Houston", "Address": "777 S Fry Rd #208, Katy, TX 77450", "Contact": "(281) 652-5943", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Delivered the Pamphlet and a Donut Box. already has a clinical research site internally. set up a physician luch with them on december 18th", "id": 146}, {"Outreach Date": "11/6/2025", "Doctor Name": "Dr. Seema Malani", "Specialty": "Rheumatology", "Practice Name": "Arthritis Clinic of Katy", "Address": "2630 N Mason Rd A2, Katy, TX 77449", "Contact": "281) 712-8360", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Delivered the Pamphlet and a Donut Box. they are already working with a clinical research site.", "id": 147}, {"Outreach Date": "11/6/2025", "Doctor Name": "Dr. aman Kyugasia", "Specialty": "Rheumatology", "Practice Name": "Arthritis Clinic of Katy", "Address": "2630 N Mason Rd A2, Katy, TX 77449", "Contact": "281) 712-8360", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Delivered the Pamphlet and a Donut Box. they are already working with a clinical research site.", "id": 148}, {"Outreach Date": "11/13/2025", "Doctor Name": "Wajeeha Yousaf", "Specialty": "Rheumatology", "Practice Name": "Rheumatology Care Center", "Address": "6300 W Loop S # 333, Bellaire, TX 77401", "Contact": "", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Delivered the Pamphlet and also scheduled a lunch on the 17th at noon. Will followup with their front desk for more details.", "id": 149}, {"Outreach Date": "11/13/2025", "Doctor Name": "Dr .Ramona mihu", "Specialty": "Rheumatology", "Practice Name": "Heights Rheumatology", "Address": "204 W 19th Street, Suite 200, Houston TX 77008", "Contact": "", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Delivered the Pamphlet and gave our contact detail", "id": 150}, {"Outreach Date": "11/20/2025", "Doctor Name": "Dr. Suong M Tran", "Specialty": "Rheumatology", "Practice Name": "The Sunset Clinic", "Address": "1701 Sunset Blvd 4th Floor, Houston, TX 77005", "Contact": "", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Delivered the Pamphlet and gave our contact detail; will follow up via call on 11/21", "id": 151}, {"Outreach Date": "11/20/2025", "Doctor Name": "Naureen Alim", "Specialty": "Rheumatology", "Practice Name": "CLS Health Rheumatology Associates", "Address": "4615 SW Freeway Service Rd 10th Floor, Houston, TX 77027", "Contact": "", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Delivered the Pamphlet and gave our contact detail; will follow up via call on 11/21", "id": 152}, {"Outreach Date": "12/10/2025", "Doctor Name": "Jacqueline Vo, MD", "Specialty": "Rheumatology", "Practice Name": "Rheumatology Center of Houston - Pearland", "Address": "10907 Memorial Hermann Dr Suite 300, Pearland, TX 77584", "Contact": "", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Visited office with Muznah and dropped off PCRC materials. The Dr in (Dr. Vo) was not interested in talking or meeting with us. Front desk will be in contact if their other rheum (Dr. Wang) is interested. Will followup the week of 12/14.", "id": 153}, {"Outreach Date": "12/10/2025", "Doctor Name": "Haihui Wang, MD, PhD", "Specialty": "Rheumatology", "Practice Name": "Rheumatology Center of Houston - Pearland", "Address": "10907 Memorial Hermann Dr Suite 300, Pearland, TX 77584", "Contact": "", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Visited office with Muznah and dropped off PCRC materials. The Dr in (Dr. Vo) was not interested in talking or meeting with us. Front desk will be in contact if their other rheum (Dr. Wang) is interested. Will followup the week of 12/14.", "id": 154}, {"Outreach Date": "12/10/2025", "Doctor Name": "Ehizogie Edigin, MD", "Specialty": "Rheumatology", "Practice Name": "LIfestyle Rheumatology Clinic", "Address": "3129 Kingsley Dr suite 1940, Pearland, TX 77584", "Contact": "ediginehizogie@yahoo.com", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Office Manager, Mija Simpson (215-285-8679 / msimpson@medcoshare.com), stated Dr. Edigin just started at MedCoShare and is part time, not sure when he comes in. Provided Dr contact info: Ehizogie Edigin at ediginehizogie@yahoo.com. Followed up via email on 12/10.", "id": 155}, {"Outreach Date": "12/10/2025", "Doctor Name": "Prashanth Sunkureddi, MD", "Specialty": "Rheumatology", "Practice Name": "Texas Rheumatology", "Address": "11555 Magnolia Pkwy Suite 110, Pearland, TX 77584", "Contact": "", "Status": "Need to Follow Up", "Outreach Type": "In Person", "Notes": "unable to meet - office closed on 12/10", "id": 156}, {"Outreach Date": "12/10/2025", "Doctor Name": "Hema Salvady, MD", "Specialty": "Rheumatology", "Practice Name": "Texas Rheumatology", "Address": "11555 Magnolia Pkwy Suite 110, Pearland, TX 77584", "Contact": "", "Status": "Need to Follow Up", "Outreach Type": "In Person", "Notes": "unable to meet - office closed on 12/10", "id": 157}, {"Outreach Date": "12/10/2025", "Doctor Name": "Deepika Arora, MD", "Specialty": "Rheumatology", "Practice Name": "Texas Rheumatology", "Address": "11555 Magnolia Pkwy Suite 110, Pearland, TX 77584", "Contact": "", "Status": "Need to Follow Up", "Outreach Type": "In Person", "Notes": "unable to meet - office closed on 12/10", "id": 158}, {"Outreach Date": "12/10/2025", "Doctor Name": "Dany Thekkemuriyil, MD", "Specialty": "Rheumatology", "Practice Name": "Texas Rheumatology", "Address": "11555 Magnolia Pkwy Suite 110, Pearland, TX 77584", "Contact": "", "Status": "Need to Follow Up", "Outreach Type": "In Person", "Notes": "unable to meet - office closed on 12/10", "id": 159}, {"Outreach Date": "12/10/2025", "Doctor Name": "Carlos E Ramirez, MD", "Specialty": "Rheumatology", "Practice Name": "Dynamic Arthritis Care Clinic, PLLC", "Address": "1920 Country Pl Pkwy Suite 340, Pearland, TX 77584", "Contact": "jdiaz.docc@gmail.com", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Met with office manager, Jessica Vera-Diaz (jdiaz.docc@gmail.com) and she stated they previously were involved in clinical research, but not anymore. The Doc is hesistant if the protocol will change the doctor treatment of his pts. Offered to schedule a lunch and learn and discuss options and details to ease skepticallity. Jessica will be in contact with us if Dr. Ramirez interested. Will follow up week of 12/14.", "id": 160}, {"Outreach Date": "", "Doctor Name": "Dr. Lapin, Dr. Lizarraga, Dr. Matheson, Dr. Sutton + more", "Specialty": "Urology", "Practice Name": "Houston Metro Urology", "Address": "6560 Fannin St, Suite 1440, Scurlock Tower, Houston, TX 77030", "Contact": "713-790-9700", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 161}, {"Outreach Date": "11/19/2025", "Doctor Name": "Dr. Rudens Viera Galvez", "Specialty": "Family Medicine", "Practice Name": "Clinica Hispana San Houston", "Address": "6060 Bellaire Blvd. Suite A Houston, TX 77081", "Contact": "832-649-2169", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Delivered the Pamphlet and gave our contact detail", "id": 162}, {"Outreach Date": "11/19/2025", "Doctor Name": "", "Specialty": "Family Medicine", "Practice Name": "Clinica La Caridad", "Address": "5705 Fondren Rd. Suite 101 Houston, TX 77036", "Contact": "832-925-8135", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Delivered the Pamphlet and gave our contact detail", "id": 163}, {"Outreach Date": "11/19/2025", "Doctor Name": "", "Specialty": "Family Medicine", "Practice Name": "Bissonnet Medical Clinic", "Address": "6069 Bissonnet St. Houston, Texas 77081", "Contact": "713-587-0500", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Delivered the Pamphlet and gave our contact detail", "id": 164}, {"Outreach Date": "", "Doctor Name": "", "Specialty": "Family Medicine", "Practice Name": "Clinica Universal Hispana", "Address": "11135 S Post Oak Rd. Suite D, Houston, TX 77035", "Contact": "(832) 740-4550", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Delivered the Pamphlet and gave our contact detail", "id": 165}, {"Outreach Date": "", "Doctor Name": "", "Specialty": "Family Medicine", "Practice Name": "Clinica Hispana Bellaire", "Address": "12546 Bellaire Blvd Houston, TX 77072", "Contact": "832-230-4104", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 166}, {"Outreach Date": "", "Doctor Name": "", "Specialty": "Family Medicine", "Practice Name": "Latin Clinic", "Address": "3961 S Gessner Rd Houston, TX 77063", "Contact": "832-986-5007", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 167}, {"Outreach Date": "", "Doctor Name": "", "Specialty": "Family Medicine", "Practice Name": "Clinica Hispana", "Address": "5950 S Gessner Rd Houston, TX 77036", "Contact": "713-271-0622", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 168}, {"Outreach Date": "", "Doctor Name": "", "Specialty": "Family Medicine", "Practice Name": "Clinica Hispana Fe y Esperanza", "Address": "5724 Chimney Rock Rd Houston, TX 77081", "Contact": "713-505-1077", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 169}, {"Outreach Date": "", "Doctor Name": "", "Specialty": "Family Medicine", "Practice Name": "Clinica Salud Hispana", "Address": "6611 Chimney Rock Rd Suite 2 Houston, TX 77081", "Contact": "773-595-8368", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 170}, {"Outreach Date": "", "Doctor Name": "", "Specialty": "Family Medicine", "Practice Name": "Clinica Universal Hispana", "Address": "11135 S Post Oak Rd suite D Houston, TX 77035", "Contact": "832-740-4550", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 171}, {"Outreach Date": "", "Doctor Name": "", "Specialty": "Family Medicine", "Practice Name": "Clinica Hispana Cruz #3", "Address": "5411 S Braeswood Blvd Houston, TX 77096", "Contact": "832-353-2602", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 172}, {"Outreach Date": "", "Doctor Name": "", "Specialty": "Family Medicine", "Practice Name": "Clinica Hispana Rubymed-Houston", "Address": "608 S Sgt Macario Garcia D Houston, TX 77011", "Contact": "281-241-8440", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 173}, {"Outreach Date": "", "Doctor Name": "", "Specialty": "Family Medicine", "Practice Name": "Clinica Hispana Harrisburg", "Address": "7323 Harrisburg Blvd Houston, TX 77011", "Contact": "832-538-1088", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 174}, {"Outreach Date": "", "Doctor Name": "", "Specialty": "Family Medicine", "Practice Name": "Clinica Hispana Houston", "Address": "8470 Gulf Fwy # B1 Houston, TX 77061", "Contact": "832-429-2675", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 175}, {"Outreach Date": "", "Doctor Name": "", "Specialty": "Family Medicine", "Practice Name": "Clinica Corazon Hispano", "Address": "11550 Gulf Fwy Houston, TX 77034", "Contact": "713-944-0477", "Status": "Pending", "Outreach Type": "", "Notes": "", "id": 176}, {"Outreach Date": "11/19/2025", "Doctor Name": "Dr. Oscar de Valle, Dr. Nixcela Ares Valdes", "Specialty": "Family Medicine", "Practice Name": "Clinica Hispana", "Address": "8410 Fondren Rd. Houston, TX 77074", "Contact": "Mrs. Ophelia Mendez 713-682-7066 ext. 107", "Status": "Completed", "Outreach Type": "Site Visit", "Notes": "Delivered the Pamphlet and gave our contact detail", "id": 177}]</script>
+<script>
+const DEFAULT_DATA = JSON.parse(document.getElementById('app-data').textContent);
+const STORAGE_KEY = 'physician-outreach-records';
+
+let records = [];
+let filtered = [];
+let activeStatus = 'All';
+let activeSpecialty = 'All';
+let searchTerm = '';
+let sortBy = 'specialty';
+let editingId = null;
+
+const STATUS_ORDER = ['Pending','Need to Follow Up','First Meeting Scheduled','Completed'];
+const STATUS_META = {
+  'Completed': {cls:'completed', bar:'var(--sage)'},
+  'Pending': {cls:'pending', bar:'var(--ochre)'},
+  'Need to Follow Up': {cls:'followup', bar:'var(--rust)'},
+  'First Meeting Scheduled': {cls:'scheduled', bar:'var(--blue)'},
+  '': {cls:'none', bar:'#ccc'}
+};
+
+function pillHtml(status){
+  const meta = STATUS_META[status] || STATUS_META[''];
+  const label = status || 'Not set';
+  return `<span class="pill ${meta.cls}">${escapeHtml(label)}</span>`;
+}
+
+function escapeHtml(s){
+  if(s===undefined || s===null) return '';
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+async function loadData(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, true);
+    if(res && res.value){
+      records = JSON.parse(res.value);
+      return;
+    }
+  }catch(e){}
+  records = DEFAULT_DATA.map(r => ({...r, 'Next Follow-Up': r['Next Follow-Up'] || ''}));
+  await saveData(false);
+}
+
+async function saveData(flash=true){
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify(records), true);
+    if(flash) flashSaved();
+  }catch(e){
+    console.error('Storage error', e);
+  }
+}
+
+function flashSaved(){
+  const el = document.getElementById('savedFlash');
+  el.classList.add('show');
+  setTimeout(()=> el.classList.remove('show'), 1400);
+}
+
+function populateSpecialtyFilter(){
+  const sel = document.getElementById('specialtyFilter');
+  const specialties = Array.from(new Set(records.map(r=>r.Specialty).filter(Boolean))).sort();
+  sel.innerHTML = '<option value="All">All specialties</option>' + specialties.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+}
+
+function renderChips(){
+  const wrap = document.getElementById('statusChips');
+  const counts = {};
+  STATUS_ORDER.forEach(s=>counts[s]=0);
+  records.forEach(r=>{ if(counts[r.Status]!==undefined) counts[r.Status]++; });
+  const chips = ['All', ...STATUS_ORDER];
+  wrap.innerHTML = chips.map(s=>{
+    const label = s==='All' ? `All (${records.length})` : `${s} (${counts[s]||0})`;
+    return `<div class="chip ${activeStatus===s?'active':''}" data-status="${escapeHtml(s)}">${escapeHtml(label)}</div>`;
+  }).join('');
+  wrap.querySelectorAll('.chip').forEach(c=>{
+    c.addEventListener('click', ()=>{ activeStatus = c.dataset.status; renderAll(); });
+  });
+}
+
+function renderStages(){
+  const total = records.length;
+  const completed = records.filter(r=>r.Status==='Completed').length;
+  const pending = records.filter(r=>r.Status==='Pending').length;
+  const followup = records.filter(r=>r.Status==='Need to Follow Up').length;
+  const stages = [
+    {k:'total', label:'Total contacts', num: total, pct:100, color:'var(--ink)'},
+    {k:'completed', label:'Completed', num: completed, pct: total? completed/total*100:0, color:'var(--sage)'},
+    {k:'pending', label:'Pending', num: pending, pct: total? pending/total*100:0, color:'var(--ochre)'},
+    {k:'followup', label:'Need to follow up', num: followup, pct: total? followup/total*100:0, color:'var(--rust)'},
+  ];
+  const map = {total:'All', completed:'Completed', pending:'Pending', followup:'Need to Follow Up'};
+  document.getElementById('stageRow').innerHTML = stages.map(s=>`
+    <div class="stage ${activeStatus===map[s.k]?'active':''}" data-k="${s.k}">
+      <div class="stage-label">${s.label}</div>
+      <div class="stage-num">${s.num}</div>
+      <div class="stage-bar"><div class="stage-bar-fill" style="width:${s.pct}%;background:${s.color}"></div></div>
+    </div>
+  `).join('');
+  document.querySelectorAll('.stage').forEach(el=>{
+    el.addEventListener('click', ()=>{ activeStatus = map[el.dataset.k]; renderAll(); });
+  });
+}
+
+function applyFilters(){
+  filtered = records.filter(r=>{
+    if(activeStatus!=='All' && r.Status!==activeStatus) return false;
+    if(activeSpecialty!=='All' && r.Specialty!==activeSpecialty) return false;
+    if(searchTerm){
+      const hay = [r['Doctor Name'], r['Practice Name'], r.Notes, r.Address].join(' ').toLowerCase();
+      if(!hay.includes(searchTerm.toLowerCase())) return false;
+    }
+    return true;
+  });
+  filtered.sort((a,b)=>{
+    if(sortBy==='specialty') return (a.Specialty||'').localeCompare(b.Specialty||'') || (a['Doctor Name']||'').localeCompare(b['Doctor Name']||'');
+    if(sortBy==='status') return STATUS_ORDER.indexOf(a.Status) - STATUS_ORDER.indexOf(b.Status);
+    if(sortBy==='doctor') return (a['Doctor Name']||'').localeCompare(b['Doctor Name']||'');
+    if(sortBy==='followup'){
+      const av = a['Next Follow-Up'] || '9999-99-99';
+      const bv = b['Next Follow-Up'] || '9999-99-99';
+      return av.localeCompare(bv);
+    }
+    return 0;
+  });
+}
+
+function renderTable(){
+  const body = document.getElementById('tableBody');
+  const empty = document.getElementById('emptyState');
+  document.getElementById('countLine').textContent = `Showing ${filtered.length} of ${records.length} contacts`;
+  if(filtered.length===0){
+    body.innerHTML='';
+    empty.style.display='block';
+    return;
+  }
+  empty.style.display='none';
+  body.innerHTML = filtered.map(r=>`
+    <tr data-id="${r.id}">
+      <td>
+        <div class="doc-name">${escapeHtml(r['Doctor Name']||'—')}</div>
+        <div class="practice-name">${escapeHtml(r['Practice Name']||'')}</div>
+      </td>
+      <td>${escapeHtml(r.Specialty||'')}</td>
+      <td>${pillHtml(r.Status)}</td>
+      <td>${escapeHtml(r['Outreach Type']||'—')}</td>
+      <td>${r['Next Follow-Up'] ? escapeHtml(r['Next Follow-Up']) : '<span style="color:#B5473A;">—</span>'}</td>
+      <td><div class="notes-preview">${escapeHtml(r.Notes||'')}</div></td>
+    </tr>
+  `).join('');
+  body.querySelectorAll('tr').forEach(tr=>{
+    tr.addEventListener('click', ()=> openDrawer(parseInt(tr.dataset.id)));
+  });
+}
+
+function renderAll(){
+  applyFilters();
+  renderChips();
+  renderStages();
+  renderTable();
+}
+
+function openDrawer(id){
+  editingId = id;
+  const r = records.find(x=>x.id===id);
+  if(!r) return;
+  const drawer = document.getElementById('drawer');
+  drawer.innerHTML = `
+    <div class="drawer-head">
+      <button class="drawer-close" id="closeDrawer">&times;</button>
+      <h2>${escapeHtml(r['Doctor Name']||'Unnamed contact')}</h2>
+      <div class="practice">${escapeHtml(r['Practice Name']||'')}</div>
+    </div>
+    <div class="drawer-body">
+      <div class="field"><label>Specialty</label><div class="static">${escapeHtml(r.Specialty||'—')}</div></div>
+      <div class="field"><label>Address</label><div class="static">${escapeHtml(r.Address||'—')}</div></div>
+      <div class="field"><label>Contact</label><div class="static">${escapeHtml(r.Contact||'—')}</div></div>
+      <div class="field-row">
+        <div class="field">
+          <label>Status</label>
+          <select id="editStatus">
+            ${['Pending','Need to Follow Up','First Meeting Scheduled','Completed'].map(s=>`<option value="${s}" ${r.Status===s?'selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field">
+          <label>Outreach type</label>
+          <select id="editType">
+            ${['','Site Visit','Call','Email','In Person','Clinic Visit','WhatsApp Message','Letter/Fax'].map(s=>`<option value="${s}" ${r['Outreach Type']===s?'selected':''}>${s||'— none —'}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Last outreach date</label>
+          <input type="date" id="editDate" value="${escapeHtml(r['Outreach Date']||'')}">
+        </div>
+        <div class="field">
+          <label>Next follow-up</label>
+          <input type="date" id="editFollowup" value="${escapeHtml(r['Next Follow-Up']||'')}">
+        </div>
+      </div>
+      <div class="field">
+        <label>Notes</label>
+        <textarea id="editNotes">${escapeHtml(r.Notes||'')}</textarea>
+      </div>
+    </div>
+    <div class="drawer-footer">
+      <button class="btn ghost" id="cancelEdit">Cancel</button>
+      <button class="btn" id="saveEdit">Save changes</button>
+    </div>
+  `;
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.getElementById('closeDrawer').onclick = closeDrawer;
+  document.getElementById('cancelEdit').onclick = closeDrawer;
+  document.getElementById('saveEdit').onclick = async ()=>{
+    r.Status = document.getElementById('editStatus').value;
+    r['Outreach Type'] = document.getElementById('editType').value;
+    r['Outreach Date'] = document.getElementById('editDate').value;
+    r['Next Follow-Up'] = document.getElementById('editFollowup').value;
+    r.Notes = document.getElementById('editNotes').value;
+    await saveData();
+    closeDrawer();
+    renderAll();
+  };
+}
+
+function closeDrawer(){
+  document.getElementById('drawerOverlay').classList.remove('open');
+  editingId = null;
+}
+
+function openAddModal(){
+  const modal = document.getElementById('addModal');
+  modal.innerHTML = `
+    <div class="modal-head"><h2>Add a new contact</h2></div>
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field"><label>Doctor name</label><input id="newDoctor" placeholder="Dr. Jane Smith"></div>
+        <div class="field"><label>Specialty</label><input id="newSpecialty" placeholder="Rheumatology"></div>
+      </div>
+      <div class="field"><label>Practice name</label><input id="newPractice"></div>
+      <div class="field"><label>Address</label><input id="newAddress"></div>
+      <div class="field-row">
+        <div class="field"><label>Contact</label><input id="newContact" placeholder="Phone or email"></div>
+        <div class="field">
+          <label>Status</label>
+          <select id="newStatus">
+            <option value="Pending">Pending</option>
+            <option value="Need to Follow Up">Need to Follow Up</option>
+            <option value="First Meeting Scheduled">First Meeting Scheduled</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Notes</label><textarea id="newNotes"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn ghost" id="cancelAdd">Cancel</button>
+      <button class="btn" id="confirmAdd">Add contact</button>
+    </div>
+  `;
+  document.getElementById('addOverlay').classList.add('open');
+  document.getElementById('cancelAdd').onclick = closeAddModal;
+  document.getElementById('confirmAdd').onclick = async ()=>{
+    const doctor = document.getElementById('newDoctor').value.trim();
+    const specialty = document.getElementById('newSpecialty').value.trim();
+    if(!doctor && !document.getElementById('newPractice').value.trim()){
+      alert('Please enter at least a doctor name or practice name.');
+      return;
+    }
+    const maxId = records.reduce((m,r)=>Math.max(m,r.id||0),0);
+    records.push({
+      id: maxId+1,
+      'Outreach Date':'',
+      'Doctor Name': doctor,
+      'Specialty': specialty,
+      'Practice Name': document.getElementById('newPractice').value.trim(),
+      'Address': document.getElementById('newAddress').value.trim(),
+      'Contact': document.getElementById('newContact').value.trim(),
+      'Status': document.getElementById('newStatus').value,
+      'Outreach Type': '',
+      'Next Follow-Up': '',
+      'Notes': document.getElementById('newNotes').value.trim()
+    });
+    await saveData();
+    populateSpecialtyFilter();
+    closeAddModal();
+    renderAll();
+  };
+}
+function closeAddModal(){
+  document.getElementById('addOverlay').classList.remove('open');
+}
+
+document.getElementById('searchInput').addEventListener('input', e=>{ searchTerm = e.target.value; renderAll(); });
+document.getElementById('specialtyFilter').addEventListener('change', e=>{ activeSpecialty = e.target.value; renderAll(); });
+document.getElementById('sortSelect').addEventListener('change', e=>{ sortBy = e.target.value; renderAll(); });
+document.getElementById('addBtn').addEventListener('click', openAddModal);
+document.getElementById('drawerOverlay').addEventListener('click', e=>{ if(e.target.id==='drawerOverlay') closeDrawer(); });
+document.getElementById('addOverlay').addEventListener('click', e=>{ if(e.target.id==='addOverlay') closeAddModal(); });
+
+(async function init(){
+  await loadData();
+  populateSpecialtyFilter();
+  renderAll();
+})();
+
+</script>
+</body>
+</html>
