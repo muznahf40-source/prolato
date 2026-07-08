@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Prolato Outreach Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#122622;
+  --teal:#1B3A34;
+  --teal-deep:#0E211D;
+  --paper:#F4F6F4;
+  --paper-card:#FFFFFF;
+  --line:#DDE3DF;
+  --muted:#5B6C66;
+  --sage:#4C7A5B; --sage-bg:#E4F0E6;
+  --ochre:#B8842E; --ochre-bg:#FBF0DA;
+  --rust:#B5473A; --rust-bg:#FBE6E2;
+  --blue:#3E6C8C; --blue-bg:#E4EEF4;
+  --slate:#6B6F76; --slate-bg:#ECEDEE;
+  --gold:#9C7A1E; --gold-bg:#F5EBCB;
+  --radius:10px;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',system-ui,sans-serif;font-size:14px;-webkit-font-smoothing:antialiased;}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;margin:0;}
+.mono{font-family:'IBM Plex Mono',monospace;}
+
+.topbar{background:var(--teal);color:#fff;padding:26px 28px 0;}
+.topbar-inner{max-width:1360px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;padding-bottom:22px;}
+.brand-block{display:flex;flex-direction:column;justify-content:center;}
+.brand-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#9FC2B4;margin:0 0 8px;line-height:1;}
+.brand-title{font-size:27px;line-height:1.15;color:#fff;margin:0;}
+.brand-sub{color:#B9CFC7;font-size:13px;margin:6px 0 0;line-height:1.3;}
+.sync-pill{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);padding:7px 13px;border-radius:20px;font-size:12px;color:#CFE3DB;white-space:nowrap;}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#7FD7A8;box-shadow:0 0 0 3px rgba(127,215,168,.25);}
+
+.tabs-row{max-width:1360px;margin:0 auto;padding:0 28px 16px;}
+.tabs{display:flex;gap:2px;}
+.tab{padding:12px 22px;background:rgba(255,255,255,.06);color:#CFE3DB;border:none;border-radius:8px 8px 0 0;font-family:'Inter';font-size:13.5px;font-weight:600;cursor:pointer;}
+.tab.active{background:var(--paper);color:var(--ink);}
+
+/* stat cards */
+.stage-strip{max-width:1360px;margin:24px auto 0;padding:0 28px;}
+.stage-row{display:grid;grid-template-columns:repeat(6,1fr);background:var(--paper-card);border-radius:var(--radius);box-shadow:0 6px 20px rgba(14,33,29,.10);overflow:hidden;border:1px solid var(--line);}
+.stage{padding:14px 16px;border-right:1px solid var(--line);cursor:pointer;transition:background .15s;}
+.stage:last-child{border-right:none;}
+.stage:hover{background:#F8FAF8;}
+.stage.active{background:#EFF4F0;}
+.stage-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-family:'IBM Plex Mono',monospace;}
+.stage-num{font-family:'Fraunces',serif;font-size:26px;font-weight:600;margin-top:4px;}
+.stage-bar{height:3px;border-radius:2px;margin-top:9px;background:var(--line);overflow:hidden;}
+.stage-bar-fill{height:100%;border-radius:2px;}
+
+main{max-width:1360px;margin:0 auto;padding:52px 28px 60px;}
+#trackerView, #calendarView{display:none;}
+#trackerView.show, #calendarView.show{display:block;}
+
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;}
+.search-wrap{position:relative;flex:1;min-width:220px;}
+.search-wrap input{width:100%;padding:10px 14px 10px 34px;border-radius:8px;border:1px solid var(--line);font-family:'Inter';font-size:13.5px;background:#fff;}
+.search-wrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);opacity:.45;}
+select{padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:#fff;font-family:'Inter';font-size:13.5px;color:var(--ink);}
+.btn{padding:10px 16px;border-radius:8px;border:1px solid var(--teal);background:var(--teal);color:#fff;font-family:'Inter';font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap;}
+.btn:hover{background:var(--teal-deep);}
+.btn.ghost{background:transparent;color:var(--teal);}
+.btn.ghost:hover{background:#EAF0EC;}
+.btn.small{padding:6px 12px;font-size:12.5px;}
+.btn.danger{background:var(--rust);border-color:var(--rust);}
+
+.count-line{color:var(--muted);font-size:12.5px;margin-bottom:10px;}
+
+.table-wrap{background:var(--paper-card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
+table{width:100%;border-collapse:collapse;}
+thead th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-weight:500;padding:12px 16px;border-bottom:1px solid var(--line);background:#FAFBFA;}
+tbody tr{border-bottom:1px solid var(--line);cursor:pointer;transition:background .12s;}
+tbody tr:hover{background:#F8FAF8;}
+tbody tr:last-child{border-bottom:none;}
+tbody td{padding:13px 16px;vertical-align:top;}
+.doc-name{font-weight:600;color:var(--ink);}
+.practice-sub{color:var(--muted);font-size:12.5px;margin-top:2px;}
+.pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:600;white-space:nowrap;}
+.pill.followup{background:var(--ochre-bg);color:var(--ochre);}
+.pill.developing{background:var(--blue-bg);color:var(--blue);}
+.pill.dnc{background:var(--slate-bg);color:var(--slate);}
+.pill.established{background:var(--sage-bg);color:var(--sage);}
+.pill.failed{background:var(--rust-bg);color:var(--rust);}
+.attempt-count{font-size:11.5px;color:var(--muted);margin-top:3px;}
+.notes-preview{color:var(--muted);font-size:12.5px;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.empty-state{padding:60px 20px;text-align:center;color:var(--muted);}
+
+/* Drawer */
+.overlay{position:fixed;inset:0;background:rgba(14,33,29,.45);display:none;align-items:stretch;justify-content:flex-end;z-index:50;}
+.overlay.open{display:flex;}
+.drawer{width:480px;max-width:94vw;background:#fff;height:100%;overflow-y:auto;box-shadow:-12px 0 30px rgba(0,0,0,.15);animation:slideIn .18s ease-out;}
+@keyframes slideIn{from{transform:translateX(20px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+.drawer-head{background:var(--teal);color:#fff;padding:22px 24px;position:relative;}
+.drawer-head h2{color:#fff;font-size:19px;}
+.drawer-head .sub{color:#B9CFC7;font-size:13px;margin-top:4px;}
+.drawer-close{position:absolute;top:18px;right:20px;background:none;border:none;color:#fff;font-size:20px;cursor:pointer;opacity:.8;}
+.drawer-body{padding:22px 24px 24px;}
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-bottom:6px;}
+.field input, .field select, .field textarea{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--line);font-family:'Inter';font-size:13.5px;background:#FAFBFA;}
+.field textarea{min-height:70px;resize:vertical;font-family:'Inter';}
+.field .static{padding:10px 12px;background:#FAFBFA;border-radius:8px;border:1px solid var(--line);color:var(--ink);font-size:13.5px;}
+.list-row{display:flex;gap:8px;margin-bottom:8px;}
+.list-row input{flex:1;}
+.list-del{background:#fff;border:1px solid var(--line);border-radius:6px;width:34px;flex-shrink:0;color:var(--muted);cursor:pointer;font-size:15px;}
+.list-del:hover{color:var(--rust);border-color:var(--rust);}
+.field-row{display:flex;gap:12px;}
+.field-row .field{flex:1;}
+.attempt-meter{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.attempt-meter .dots{display:flex;gap:5px;}
+.attempt-meter .dot{width:16px;height:16px;border-radius:50%;background:var(--line);}
+.attempt-meter .dot.filled{background:var(--ochre);}
+.attempt-warning{background:var(--rust-bg);color:var(--rust);padding:8px 12px;border-radius:8px;font-size:12.5px;margin-bottom:16px;}
+.section-title{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin:22px 0 10px;padding-top:14px;border-top:1px solid var(--line);}
+.history-item{background:#FAFBFA;border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:10px;position:relative;}
+.history-item .h-date{font-weight:600;font-size:13px;}
+.history-item .h-type{display:inline-block;margin-left:8px;font-size:11px;color:var(--muted);background:#EEF1EF;padding:2px 8px;border-radius:10px;}
+.history-item .h-notes{font-size:12.5px;color:var(--muted);margin-top:6px;white-space:pre-wrap;}
+.history-item .h-del{position:absolute;top:10px;right:10px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;}
+.history-item .h-del:hover{color:var(--rust);}
+.history-empty{color:var(--muted);font-size:12.5px;font-style:italic;padding:10px 0;}
+.add-attempt-form{background:#F4F6F4;border:1px dashed var(--line);border-radius:8px;padding:14px;margin-top:8px;}
+.drawer-footer{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);padding:14px 24px;display:flex;gap:10px;justify-content:flex-end;}
+.saved-flash{position:fixed;bottom:24px;right:24px;max-width:340px;background:var(--ink);color:#fff;padding:11px 18px;border-radius:8px;font-size:13px;line-height:1.4;box-shadow:0 8px 20px rgba(0,0,0,.2);opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none;z-index:100;}
+.saved-flash.show{opacity:1;transform:translateY(0);}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(14,33,29,.45);display:none;align-items:center;justify-content:center;z-index:60;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;border-radius:12px;max-width:540px;width:100%;max-height:88vh;overflow-y:auto;}
+.modal-head{padding:20px 24px;border-bottom:1px solid var(--line);}
+.modal-head h2{font-size:18px;}
+.modal-body{padding:20px 24px;}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px;}
+
+/* Calendar */
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px;}
+.cal-nav{display:flex;align-items:center;gap:12px;}
+.cal-nav button{background:#fff;border:1px solid var(--line);border-radius:8px;width:34px;height:34px;cursor:pointer;font-size:15px;color:var(--teal);}
+.cal-month-title{font-family:'Fraunces',serif;font-size:20px;min-width:190px;text-align:center;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);background:var(--line);gap:1px;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
+.cal-dow{background:#FAFBFA;padding:8px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-family:'IBM Plex Mono',monospace;}
+.cal-day{background:#fff;min-height:104px;padding:8px;position:relative;cursor:pointer;}
+.cal-day:hover{background:#F8FAF8;}
+.cal-day.other-month{background:#FAFBFA;color:#ccc;}
+.cal-day.today .cal-daynum{background:var(--teal);color:#fff;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;}
+.cal-daynum{font-size:12.5px;font-weight:600;}
+.cal-event{font-size:10.5px;background:var(--sage-bg);color:var(--sage);border-radius:5px;padding:2px 6px;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cal-event.type-followup{background:var(--ochre-bg);color:var(--ochre);}
+.cal-event.type-developing{background:var(--blue-bg);color:var(--blue);}
+.cal-event.type-extra{background:var(--gold-bg);color:var(--gold);}
+.cal-event.type-attempt{background:var(--sage-bg);color:var(--sage);}
+.cal-more{font-size:10.5px;color:var(--muted);margin-top:3px;}
+.cal-toolbar{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
+.agenda-list{margin-top:26px;}
+.agenda-item{display:flex;gap:16px;padding:14px 16px;background:var(--paper-card);border:1px solid var(--line);border-radius:8px;margin-bottom:8px;align-items:flex-start;cursor:pointer;}
+.agenda-item:hover{background:#F8FAF8;}
+.agenda-date{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--teal);min-width:78px;font-weight:600;}
+.agenda-main .a-title{font-weight:600;}
+.agenda-main .a-sub{color:var(--muted);font-size:12.5px;margin-top:2px;}
+
+footer{max-width:1360px;margin:0 auto;padding:0 28px 40px;color:var(--muted);font-size:12px;}
+
+@media(max-width:820px){
+  .stage-row{grid-template-columns:repeat(3,1fr);}
+  .stage:nth-child(3n){border-right:none;}
+}
+</style>
+</head>
+<body>
+
+<div id="appRoot">
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand-block">
+      <div class="brand-eyebrow">Prolato Clinical Research Center · Business Development</div>
+      <h1 class="brand-title">Physician Outreach Pipeline</h1>
+      <div class="brand-sub">Houston-area referral network — site visits, calls &amp; follow-ups</div>
+    </div>
+    <div class="sync-pill"><span class="sync-dot"></span> Synced for the team</div>
+  </div>
+  <div class="tabs-row">
+    <div class="tabs">
+      <button class="tab active" id="tabTracker">Tracker</button>
+      <button class="tab" id="tabCalendar">Team Visit Calendar</button>
+    </div>
+  </div>
+</div>
+
+<div class="stage-strip">
+  <div class="stage-row" id="stageRow"></div>
+</div>
+
+<main>
+  <div id="trackerView" class="show">
+    <div class="controls">
+      <div class="search-wrap">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="searchInput" type="text" placeholder="Search doctor, practice, or notes…">
+      </div>
+      <select id="specialtyFilter"></select>
+      <select id="sortSelect">
+        <option value="specialty">Sort: Specialty</option>
+        <option value="status">Sort: Status</option>
+        <option value="practice">Sort: Practice name</option>
+      </select>
+      <button class="btn" id="addBtn">+ Add contact</button>
+    </div>
+
+    <div class="chips" id="statusChips" style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px;"></div>
+    <div class="count-line" id="countLine"></div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Practice</th>
+            <th>Specialty</th>
+            <th>Status</th>
+            <th>Last Outreach</th>
+            <th>History</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <div class="empty-state" id="emptyState" style="display:none;">No contacts match your filters.</div>
+    </div>
+  </div>
+
+  <div id="calendarView">
+    <div class="cal-toolbar">
+      <button class="btn" id="scheduleBtn">+ Schedule a visit</button>
+      <button class="btn ghost" id="jumpTodayBtn">Jump to today</button>
+      <button class="btn ghost" id="exportIcsBtn">⤓ Export to Outlook (.ics)</button>
+    </div>
+    <div style="font-size:11.5px;color:var(--muted);margin:-10px 0 16px;">Exports upcoming scheduled visits as a calendar file — open it, or import it in Outlook, to add them to your own calendar. This is a one-time snapshot, not a live sync.</div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;font-size:12px;color:var(--muted);">
+      <span><span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:var(--sage);margin-right:5px;"></span>Logged outreach attempt</span>
+      <span><span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:var(--ochre);margin-right:5px;"></span>Next follow-up scheduled</span>
+      <span><span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:var(--blue);margin-right:5px;"></span>In active discussion</span>
+      <span><span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:var(--gold);margin-right:5px;"></span>Ad-hoc scheduled visit</span>
+    </div>
+    <div class="cal-header">
+      <div class="cal-nav">
+        <button id="prevMonth">&#8249;</button>
+        <div class="cal-month-title" id="calMonthTitle"></div>
+        <button id="nextMonth">&#8250;</button>
+      </div>
+      <select id="calYearJump"></select>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="agenda-list" id="agendaList"></div>
+  </div>
+
+  <footer>Data is shared across everyone using this link — edits and scheduled visits save automatically for the whole team.</footer>
+</main>
+
+<div class="overlay" id="drawerOverlay"><div class="drawer" id="drawer"></div></div>
+<div class="modal-overlay" id="addOverlay"><div class="modal" id="addModal"></div></div>
+<div class="modal-overlay" id="dayOverlay"><div class="modal" id="dayModal"></div></div>
+<div class="modal-overlay" id="scheduleOverlay"><div class="modal" id="scheduleModal"></div></div>
+<div class="modal-overlay" id="confirmOverlay"><div class="modal" id="confirmModal" style="max-width:400px;"></div></div>
+
+<div class="saved-flash" id="savedFlash">Saved</div>
+<div class="saved-flash" id="warnFlash" style="background:var(--rust);"></div>
+</div>
+
+<script id="app-data" type="application/json">[{"id": 1, "Doctor Name": "Multiple", "Specialty": "Cardiology", "Practice Name": "Memorial Cardiology Associates", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["915 Gessner, Suite 900, Houston, TX 77024"], "Contacts": ["713-464-6006"], "ScheduledVisit": null, "Notes": ""}, {"id": 2, "Doctor Name": "Multiple", "Specialty": "Cardiology", "Practice Name": "Texas Heart Specialists / HCA", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["6550 Fannin St, Suite 2403, Houston, TX 77030"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 3, "Doctor Name": "Multiple", "Specialty": "Cardiology", "Practice Name": "Memorial Katy Cardiology Associates", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["1331 W Grand Pkay N, # 130, Katy, Tx 77493"], "Contacts": ["281-392-3401"], "ScheduledVisit": null, "Notes": ""}, {"id": 4, "Doctor Name": "Multiple", "Specialty": "Cardiology", "Practice Name": "Cardiology Center of Houston", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["20710 Westheimer, Pkwy, Katy, TX 77450"], "Contacts": ["281-646-9000"], "ScheduledVisit": null, "Notes": ""}, {"id": 5, "Doctor Name": "Multiple", "Specialty": "Cardiology", "Practice Name": "Texas Heart and Vein Multispecialty Group", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["1900 N Loop W, Suite 180, Houston, TX 77018"], "Contacts": ["281-888-0809"], "ScheduledVisit": null, "Notes": ""}, {"id": 6, "Doctor Name": "Dr. Natalie Hone", "Specialty": "Dermatology", "Practice Name": "The Skin People - Dermatology", "Status": "Follow Up", "History": [{"date": "4/2/2026", "type": "Site Visit", "notes": "Dropped off marketing materials - will follow up with receptionist"}], "Next Follow-Up": "", "Addresses": ["4545 Bissonnet St #200, Bellaire, TX 77401"], "Contacts": ["(281) 456-4900"], "ScheduledVisit": null, "Notes": ""}, {"id": 7, "Doctor Name": "Dr. Camila Antia", "Specialty": "Dermatology", "Practice Name": "The Skin People - Dermatology", "Status": "Follow Up", "History": [{"date": "4/2/2026", "type": "Site Visit", "notes": "Dropped off marketing materials - will follow up with receptionist"}], "Next Follow-Up": "", "Addresses": ["4545 Bissonnet St #200, Bellaire, TX 77401"], "Contacts": ["(281) 456-4900"], "ScheduledVisit": null, "Notes": ""}, {"id": 8, "Doctor Name": "Dr. Howard Gerber, MD", "Specialty": "Dermatology", "Practice Name": "Bellaire Dermatology", "Status": "DNC", "History": [{"date": "4/2/2026", "type": "Site Visit", "notes": "Already doing clinical research trial with Sanofi"}], "Next Follow-Up": "", "Addresses": ["6565 W Loop S Suite 800, Bellaire, TX 77401"], "Contacts": ["(713) 661-4383"], "ScheduledVisit": null, "Notes": ""}, {"id": 9, "Doctor Name": "Dr. Nicole Bender, MD", "Specialty": "Dermatology", "Practice Name": "Bellaire Dermatology", "Status": "DNC", "History": [{"date": "4/2/2026", "type": "Site Visit", "notes": "Already doing clinical research trial with Sanofi"}], "Next Follow-Up": "", "Addresses": ["6565 W Loop S Suite 800, Bellaire, TX 77401"], "Contacts": ["(713) 661-4383"], "ScheduledVisit": null, "Notes": ""}, {"id": 10, "Doctor Name": "Multiple", "Specialty": "Dermatology", "Practice Name": "Elite Dermatology & Plastic Surgery", "Status": "Follow Up", "History": [{"date": "4/9/2026", "type": "Site Visit", "notes": ""}], "Next Follow-Up": "", "Addresses": ["2571 Kirby Drive, Houston, TX 77019"], "Contacts": ["713-401-9701"], "ScheduledVisit": null, "Notes": ""}, {"id": 11, "Doctor Name": "Dr. Shah, Dr. Zoghbi, Dr. Mintz, Dr. Duffy", "Specialty": "Dermatology", "Practice Name": "Houston Dermatology Associates", "Status": "Follow Up", "History": [{"date": "", "type": "", "notes": "Dropped off marketing materials - will follow up with receptionist"}], "Next Follow-Up": "", "Addresses": ["6560 Fannin St, Suite 1720, Houston, TX 77030"], "Contacts": ["713-790-0058"], "ScheduledVisit": null, "Notes": ""}, {"id": 12, "Doctor Name": "Dr. Bruce, Dr. Adler + team", "Specialty": "Dermatology", "Practice Name": "SBA Dermatology & Plastic Surgery", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["This practice closed on 01/DEC/2025 Dr. Adler is now located at Elite Dermatology, 1930 Pearland Pkwy, Suite 154, Pearland, TX 77581 (Dr. Bruce is no longer listed on website)"], "Contacts": ["281-816-5503"], "ScheduledVisit": null, "Notes": ""}, {"id": 13, "Doctor Name": "Dr. Cindy Berthelot", "Specialty": "Dermatology", "Practice Name": "Houston Institute of Dermatology", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["2565 Bay Area Blvd, Houston, TX 77058"], "Contacts": ["281-480-7272"], "ScheduledVisit": null, "Notes": ""}, {"id": 14, "Doctor Name": "Multiple", "Specialty": "Dermatology", "Practice Name": "Advanced Dermatology", "Status": "Follow Up", "History": [{"date": "4/9/2026", "type": "Site Visit", "notes": "Indications do not align with what we are looking for."}], "Next Follow-Up": "", "Addresses": ["2051 Greenhouse Rd, Suite 270, Houston, TX 77084"], "Contacts": ["281-665-4444"], "ScheduledVisit": null, "Notes": ""}, {"id": 15, "Doctor Name": "20+ dermatologists", "Specialty": "Dermatology", "Practice Name": "Complete Dermatology", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["4500 Washington Ave, Suite 250, Houston, TX 77077"], "Contacts": ["281-857-6870"], "ScheduledVisit": null, "Notes": ""}, {"id": 16, "Doctor Name": "Dr. Adler", "Specialty": "Dermatology", "Practice Name": "Elite Dermatology", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["1930 Pearland Pkwy, Suite 154, Pearland, TX 77581"], "Contacts": ["713-526-5511"], "ScheduledVisit": null, "Notes": ""}, {"id": 17, "Doctor Name": "Dr. Vi Pham, MD", "Specialty": "Endocrinology", "Practice Name": "Medical Clinic of Houston", "Status": "Follow Up", "History": [{"date": "", "type": "Site Visit", "notes": "Visited the office and dropped off folder to MA"}], "Next Follow-Up": "", "Addresses": ["1701 Sunset Blvd, Houston, TX 77005"], "Contacts": ["713-807-4276"], "ScheduledVisit": null, "Notes": ""}, {"id": 18, "Doctor Name": "Multiple", "Specialty": "Endocrinology", "Practice Name": "Houston Endocrinology Center", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["13333 Dotson Rd, Suite 220, Houston, TX 77070"], "Contacts": ["281-251-5234"], "ScheduledVisit": null, "Notes": ""}, {"id": 19, "Doctor Name": "Multiple", "Specialty": "Endocrinology", "Practice Name": "Houston Thyroid & Endocrine Specialists", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["23920 Katy Freeway, Suite 500, Katy, TX 77494"], "Contacts": ["713-795-0770"], "ScheduledVisit": null, "Notes": ""}, {"id": 20, "Doctor Name": "Dr. Shikha Bharaktiya", "Specialty": "Endocrinology", "Practice Name": "Endocrinology Clinics of Texas", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["7500 Beechnut St, #252, Houston, TX 77074"], "Contacts": ["281-779-4243"], "ScheduledVisit": null, "Notes": ""}, {"id": 21, "Doctor Name": "Dr. Aleem Kanji", "Specialty": "Endocrinology", "Practice Name": "Ethos Endocrinology", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["2500 Fondren Rd, Suite 320, Houston, TX 77063"], "Contacts": ["713-804-8349"], "ScheduledVisit": null, "Notes": ""}, {"id": 22, "Doctor Name": "Dr. Harbison, Dr. Markan", "Specialty": "Endocrinology", "Practice Name": "Advanced Endocrinology & Diabetes", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["7400 Fannin St, Suite 855, Houston, TX 77054"], "Contacts": ["713-796-9466"], "ScheduledVisit": null, "Notes": ""}, {"id": 23, "Doctor Name": "10 physicians", "Specialty": "Endocrinology", "Practice Name": "The Endocrine Center", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["10837 Katy Freeway, Suite 200, Houston, TX 77079"], "Contacts": ["713-468-2122"], "ScheduledVisit": null, "Notes": ""}, {"id": 24, "Doctor Name": "Dr. Erin Roe", "Specialty": "Endocrinology", "Practice Name": "Sol Endocrinology", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["4428 N Central Expy, Suite 101, Dallas, TX 75206"], "Contacts": ["469-648-3636"], "ScheduledVisit": null, "Notes": ""}, {"id": 25, "Doctor Name": "Dr. Vivian O. Rodriguez, MD", "Specialty": "Endocrinology/IM", "Practice Name": "Private Clinic", "Status": "Follow Up", "History": [{"date": "4/2/2026", "type": "Site Visit", "notes": "Talked with receptionist about clinical research/delivered marketing material - will follow up on Mon. 4/6/2026"}], "Next Follow-Up": "", "Addresses": ["2201 W. Holcombe Blvd., Ste. 245, Houston, TX 77030"], "Contacts": ["713-796-1188"], "ScheduledVisit": null, "Notes": ""}, {"id": 26, "Doctor Name": "Multiple", "Specialty": "Gastroenterology", "Practice Name": "Digestive Health Associates", "Status": "Follow Up", "History": [{"date": "", "type": "Site Visit", "notes": ""}], "Next Follow-Up": "", "Addresses": ["929 Gessner Rd, Suite 1360, Houston, TX 77024"], "Contacts": ["713-468-2030"], "ScheduledVisit": null, "Notes": ""}, {"id": 27, "Doctor Name": "Multiple", "Specialty": "Gastroenterology", "Practice Name": "Houston Gastro Institute", "Status": "Follow Up", "History": [{"date": "", "type": "Site Visit", "notes": "Send email to clinic@drasamoah.com"}], "Next Follow-Up": "", "Addresses": ["25230 Kingsland Blvd, Suite 101, Katy, TX 77494"], "Contacts": ["281-746-9284"], "ScheduledVisit": null, "Notes": ""}, {"id": 28, "Doctor Name": "Dr. Reddy, Dr. Hamat + team", "Specialty": "Gastroenterology", "Practice Name": "Digestive & Liver Disease Consultants PA", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["275 Lantern Bend Dr, Suite 200, Houston, TX 77090"], "Contacts": ["281-440-0101"], "ScheduledVisit": null, "Notes": ""}, {"id": 29, "Doctor Name": "Dr. Nat Bala + team", "Specialty": "Gastroenterology", "Practice Name": "Gastroenterology Consultants", "Status": "Follow Up", "History": [{"date": "", "type": "Site Visit", "notes": ""}], "Next Follow-Up": "", "Addresses": ["444 FM 1959, Suite A, Houston, TX 77034"], "Contacts": ["281-481-9400"], "ScheduledVisit": null, "Notes": ""}, {"id": 30, "Doctor Name": "George Fakhre, MD", "Specialty": "Internal Medicine", "Practice Name": "Personal Practice", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["319 N Hood St, Lake Providence, LA 71254"], "Contacts": ["318-559-1221"], "ScheduledVisit": null, "Notes": ""}, {"id": 31, "Doctor Name": "Dr. M. Khawaja, Dr. A. Khawaja", "Specialty": "Internal Medicine", "Practice Name": "CareOne Internal Medicine", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["2222 Greenhouse Rd, Suite 400, Houston, TX 77084"], "Contacts": ["281-201-1032"], "ScheduledVisit": null, "Notes": ""}, {"id": 32, "Doctor Name": "Multiple", "Specialty": "Internal Medicine", "Practice Name": "Houston Internal Medicine Associates PA", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["21336 Provinicial blvd, Katy, TX 77450"], "Contacts": ["281-809-0085"], "ScheduledVisit": null, "Notes": ""}, {"id": 33, "Doctor Name": "Multiple", "Specialty": "Internal Medicine", "Practice Name": "Premier NW Houston Medical Group", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["7025 Fry Rd, Suite 500, Cypress, TX 77433"], "Contacts": ["281-758-1022"], "ScheduledVisit": null, "Notes": ""}, {"id": 34, "Doctor Name": "Hoonmmo L. Koo, MD", "Specialty": "Inpatient Infectious Disease", "Practice Name": "Inpatient Infectious Disease Consultants", "Status": "Follow Up", "History": [{"date": "4/2/2026", "type": "Site Visit", "notes": "Dropped off marketing materials, will follow up with receptionsit on if Dr. Koo is interested."}], "Next Follow-Up": "", "Addresses": ["2201 W. Holcombe Blvd., Ste. 305, Houston, TX 77030"], "Contacts": ["713-791-1020"], "ScheduledVisit": null, "Notes": ""}, {"id": 35, "Doctor Name": "Vijay Koka, MD", "Specialty": "Nephrology", "Practice Name": "Renal Specialists of Houston", "Status": "Developing", "History": [{"date": "10/16/2025", "type": "Email", "notes": "Dr. Koka replied on 10/20 with just wanting to refer pt with fsgs, awaiting response from pt if interested."}], "Next Follow-Up": "", "Addresses": [], "Contacts": ["vkoka@renalspecialists.com"], "ScheduledVisit": null, "Notes": ""}, {"id": 36, "Doctor Name": "Roohi Khan, MD", "Specialty": "Nephrology", "Practice Name": "Kelsey-Seybold Clinic", "Status": "Developing", "History": [{"date": "10/20/2025", "type": "WhatsApp Message", "notes": "awaiting response"}], "Next Follow-Up": "", "Addresses": [], "Contacts": ["+1(304)610-3659"], "ScheduledVisit": null, "Notes": ""}, {"id": 37, "Doctor Name": "Dr. Shrikanth Raayasa", "Specialty": "Nephrology", "Practice Name": "Kingwood practice", "Status": "Developing", "History": [{"date": "10/20/2025", "type": "Site Visit", "notes": "LOI sent, sent email on 10/28 asking for availability for site visit.Site visit on 11/5, need to follow up."}], "Next Follow-Up": "", "Addresses": [], "Contacts": ["N/A (ask Dr. Mandayam)"], "ScheduledVisit": null, "Notes": ""}, {"id": 38, "Doctor Name": "Dr. Mohan Rathi", "Specialty": "Nephrology", "Practice Name": "Kingwood practice", "Status": "Developing", "History": [{"date": "10/20/2025", "type": "Site Visit", "notes": "LOI sent, sent email on 10/28 asking for availability for site visit. Site visit on 11/5, need to follow up."}], "Next Follow-Up": "", "Addresses": [], "Contacts": ["N/A (ask Dr. Mandayam)"], "ScheduledVisit": null, "Notes": ""}, {"id": 39, "Doctor Name": "Raul Mulpuri", "Specialty": "Nephrology", "Practice Name": "N/A (ask Sameer)", "Status": "Follow Up", "History": [{"date": "10/28/2025", "type": "Site Visit", "notes": "will follow up to remind him to provide numbers of potential pts."}], "Next Follow-Up": "", "Addresses": ["200S Rivershire Dr"], "Contacts": ["N/A (ask Sameer)"], "ScheduledVisit": null, "Notes": ""}, {"id": 40, "Doctor Name": "Rupal Patel MD", "Specialty": "Nephrology", "Practice Name": "", "Status": "Developing", "History": [{"date": "11/6/2025", "type": "Email", "notes": "Emailed Dr. Patel asking availability for next week after he expressed interest in collaborating, organizing meeting time currently. Meeting did occur. Waiting response from their team on collaboration structure."}], "Next Follow-Up": "", "Addresses": [], "Contacts": ["patel@khcmed.com, 832-721-2927"], "ScheduledVisit": null, "Notes": ""}, {"id": 41, "Doctor Name": "Suleiman Daifallah, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Status": "Follow Up", "History": [{"date": "11/21/2025", "type": "Call", "notes": "Talked with receptionist - Dr. not in office until first week of december, but passed along information. Will follow up first week of Dec."}], "Next Follow-Up": "", "Addresses": ["1295 E 151st St #7, Olathe, KS 66062"], "Contacts": ["913-381-0622"], "ScheduledVisit": null, "Notes": ""}, {"id": 42, "Doctor Name": "Connie Roe, NP", "Specialty": "Nephrology", "Practice Name": "Nephrology Associates (Kidney Care Specialists)", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["9501 State Avenue, Suite 1, Kansas City, KS 66111"], "Contacts": ["913-441-5757"], "ScheduledVisit": null, "Notes": ""}, {"id": 43, "Doctor Name": "Ellen T McCarthy, MD", "Specialty": "Nephrology", "Practice Name": "University of Kansas Hospital System", "Status": "Follow Up", "History": [{"date": "11/21/2025", "type": "Email", "notes": "Talked with receptionist - will forward information to hholferty@kumc.edu so Dr. can look at info to see whether to move forward or not. 11/28/25: followed up via email."}], "Next Follow-Up": "", "Addresses": ["3901 Rainbow Blvd, Kansas City, KS 66160"], "Contacts": ["913-588-5000"], "ScheduledVisit": null, "Notes": ""}, {"id": 44, "Doctor Name": "Heather Conklin, NP", "Specialty": "Nephrology", "Practice Name": "Nepohrology Associates (Kidney Care Specialists)", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["8901 W 74th St Suite 328, Shawnee, KS 66204"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 45, "Doctor Name": "Tarek Darwish, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Status": "Follow Up", "History": [{"date": "11/21/2025", "type": "Email", "notes": "Talked with receptionist - Dr. not in office, but will forward information to drdarwish@kskidney.com. 11/28/25: Followed up via email."}], "Next Follow-Up": "", "Addresses": ["11661 College Blvd, Overland Park, KS 66210"], "Contacts": ["(913) 495-5517"], "ScheduledVisit": null, "Notes": ""}, {"id": 46, "Doctor Name": "Brian S. Pavey, DO", "Specialty": "Nephrology", "Practice Name": "Mowery Clinic Main", "Status": "Follow Up", "History": [{"date": "11/21/2025", "type": "Call", "notes": "Phone operating hours are 8am-5pm Mon-Thurs and 8am-noon on Fri. Called past noon on friday, so will reach back out next week."}], "Next Follow-Up": "", "Addresses": ["737 E. Crawford, Salina, KS 67401"], "Contacts": ["785-827-7261"], "ScheduledVisit": null, "Notes": ""}, {"id": 47, "Doctor Name": "Henry S. Reed, MD", "Specialty": "Nephrology", "Practice Name": "Mowery Clinic Main", "Status": "Follow Up", "History": [{"date": "11/21/2025", "type": "Call", "notes": "Phone operating hours are 8am-5pm Mon-Thurs and 8am-noon on Fri. Called past noon on friday, so will reach back out next week."}], "Next Follow-Up": "", "Addresses": ["737 E. Crawford, Salina, KS 67401"], "Contacts": ["785-827-7261"], "ScheduledVisit": null, "Notes": ""}, {"id": 48, "Doctor Name": "Akshey K. Gupta, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Status": "Follow Up", "History": [{"date": "11/21/2025", "type": "Call", "notes": "Office was closed, but received fax number: 337-235-1032"}], "Next Follow-Up": "", "Addresses": ["300 W St Mary Blvd, Lafayette, LA 70506"], "Contacts": ["(337) 233-6593"], "ScheduledVisit": null, "Notes": ""}, {"id": 49, "Doctor Name": "Michael Kuo-Tsun Liu, MD", "Specialty": "Nephrology", "Practice Name": "Kidney Consultants of Louisiana", "Status": "Follow Up", "History": [{"date": "11/24/2025", "type": "Email", "notes": "Dr. was not in, but left a message for the receptionist to give to him, and was given email: kidney.consultants@hotmail.com. 11/28/26: followed up via email."}], "Next Follow-Up": "", "Addresses": ["301 Alcide Domingue Drive, Lafayette, LA 70506"], "Contacts": ["337-234-7123"], "ScheduledVisit": null, "Notes": ""}, {"id": 50, "Doctor Name": "Yelena A. Magay, FNP", "Specialty": "Nephrology", "Practice Name": "Ochsner University Hospital & Clinics", "Status": "Follow Up", "History": [{"date": "", "type": "Call", "notes": "Dr. was not in, but left a message for the receptionist."}], "Next Follow-Up": "", "Addresses": ["2390 W Congress St, Lafayette, LA 70506"], "Contacts": ["(337) 261-6759"], "ScheduledVisit": null, "Notes": ""}, {"id": 51, "Doctor Name": "Rana El Sabbagh, MD", "Specialty": "Nephrology", "Practice Name": "Iberia Medical Center", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["2308 E. Main Street Suite E New Iberia, LA 70560"], "Contacts": ["337-374-7156"], "ScheduledVisit": null, "Notes": ""}, {"id": 52, "Doctor Name": "Pallavi Shirsat, MD", "Specialty": "Nephrology", "Practice Name": "Minden Nephrology & Hypertension", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["#2 Medical Plaza Minden, LA 71055"], "Contacts": ["318-382-7290"], "ScheduledVisit": null, "Notes": ""}, {"id": 53, "Doctor Name": "Rajat Gulati, MD", "Specialty": "Nephrology", "Practice Name": "Kidney Care of Louisiana", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["201 4th St suite 5A, Alexandria, LA 71301"], "Contacts": ["318-483-1961"], "ScheduledVisit": null, "Notes": ""}, {"id": 54, "Doctor Name": "Goutham Talluri, MD", "Specialty": "Nephrology", "Practice Name": "Kidney Care of Louisiana", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["201 4th Street, Suite 5A, Alexandria, LA 71301"], "Contacts": ["318-483-1961"], "ScheduledVisit": null, "Notes": ""}, {"id": 55, "Doctor Name": "Jocelyne A. Saikali, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["506 S 6th St, Leesville, LA 71446"], "Contacts": ["337-509-4005"], "ScheduledVisit": null, "Notes": ""}, {"id": 56, "Doctor Name": "Sholer Chris, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["2201 N Glade Ave a, Bethany, OK 73008"], "Contacts": ["405-842-8298"], "ScheduledVisit": null, "Notes": ""}, {"id": 57, "Doctor Name": "Zahid B. Ahmad, MD", "Specialty": "Nephrology", "Practice Name": "OUHSC", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["825 NE 10th St #4E, Oklahoma City, OK 73104"], "Contacts": ["405-271-3445"], "ScheduledVisit": null, "Notes": ""}, {"id": 58, "Doctor Name": "Benjamin D. Cowley, MD, FACP, FASN", "Specialty": "Nephrology", "Practice Name": "OUHSC", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["825 NE 10th St #4E, Oklahoma City, OK 73104"], "Contacts": ["405-271-3445"], "ScheduledVisit": null, "Notes": ""}, {"id": 59, "Doctor Name": "Kirolos Iskander, MD", "Specialty": "Nephrology", "Practice Name": "OUHSC", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["1000 NE 13th St #1g, Oklahoma City, OK 73104"], "Contacts": ["405-271-3445"], "ScheduledVisit": null, "Notes": ""}, {"id": 60, "Doctor Name": "Shehzad Bandhani, MD", "Specialty": "Nephrology", "Practice Name": "Medical Clinic in OKC", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["3366 Northwest Expy #550, Oklahoma City, OK 73112"], "Contacts": ["405-942-5442"], "ScheduledVisit": null, "Notes": ""}, {"id": 61, "Doctor Name": "Gary D. Bond, MD", "Specialty": "Nephrology", "Practice Name": "Medical Clinic in OKC", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["3366 Northwest Expy #550, Oklahoma City, OK 73112"], "Contacts": ["405-942-5442"], "ScheduledVisit": null, "Notes": ""}, {"id": 62, "Doctor Name": "Dr. Spencer Su, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Status": "Developing", "History": [{"date": "", "type": "Call", "notes": "Planned a Lunch and Learn with Dr. Su's office (other 2 nephros) on Jan 14th"}], "Next Follow-Up": "", "Addresses": ["7500 Beechnut St #262, Houston, TX 77074"], "Contacts": ["832-767-1091"], "ScheduledVisit": null, "Notes": ""}, {"id": 63, "Doctor Name": "Dr. Shahzeb Naqvi, MD", "Specialty": "Nephrology", "Practice Name": "Save Kidney", "Status": "Established", "History": [{"date": "", "type": "Site Visit", "notes": "Up to Date: Dr. Naqvi has signed service agreement with Prolato and referred 1 pt."}], "Next Follow-Up": "", "Addresses": ["150 Pine Forest Dr Ste 102, Shenandoah, TX 77384"], "Contacts": ["832-813-8074"], "ScheduledVisit": null, "Notes": ""}, {"id": 64, "Doctor Name": "Dr. Lazaro Cherem, MD", "Specialty": "Nephrology", "Practice Name": "Lazaro Cherem MD", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["7015 Almeda Rd, Houston, TX 77054"], "Contacts": ["(713) 799-2900"], "ScheduledVisit": null, "Notes": ""}, {"id": 65, "Doctor Name": "Dr. Uday Khosla, MD", "Specialty": "Nephrology", "Practice Name": "Uday Khosla MD - Nephrologist", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["1724 Richmond Ave. Suite 100B, Houston, TX 77098"], "Contacts": ["(713) 352-0903"], "ScheduledVisit": null, "Notes": ""}, {"id": 66, "Doctor Name": "Founder physician", "Specialty": "Nephrology", "Practice Name": "Integrative Nephrology of Houston", "Status": "Follow Up", "History": [{"date": "Already visited Dr. Spencer's office in past", "type": "", "notes": ""}], "Next Follow-Up": "", "Addresses": ["7500 Beechnut St #262, Houston, TX 77074"], "Contacts": ["832-767-1091"], "ScheduledVisit": null, "Notes": ""}, {"id": 67, "Doctor Name": "Dr. Jung, Dr. Luong, Dr. Sahai, Dr. Su, Dr. Tambra + more", "Specialty": "Nephrology", "Practice Name": "Integrated Nephrology of Houston", "Status": "Follow Up", "History": [{"date": "Already visited Dr. Spencer's office in past", "type": "", "notes": ""}], "Next Follow-Up": "", "Addresses": ["7500 Beechnut St #262, Houston, TX 77074"], "Contacts": ["832-767-1091"], "ScheduledVisit": null, "Notes": ""}, {"id": 68, "Doctor Name": "Dr. Prakash", "Specialty": "Nephrology", "Practice Name": "Renal Clinic of Houston", "Status": "Developing", "History": [{"date": "4/9/2026", "type": "Site Visit", "notes": "Lunch and Learn completed on 4/17/2026 - need to followup"}], "Next Follow-Up": "", "Addresses": ["902 Frostwood #245, Professional BLDG 1, Houston, TX 77024"], "Contacts": ["713-464-9100"], "ScheduledVisit": null, "Notes": ""}, {"id": 69, "Doctor Name": "Dr. Bernardo, Dr. Khan, Dr. Brink", "Specialty": "Nephrology", "Practice Name": "Southwest Nephrology Associates", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["7777 Southwest Fwy suite 304, Houston, TX 77074"], "Contacts": ["713-270-4545"], "ScheduledVisit": null, "Notes": ""}, {"id": 70, "Doctor Name": "Dr. Varghese", "Specialty": "Nephrology", "Practice Name": "Diagnostic & Interventional Nephrology", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["1200 Binz Street, Suite 1110, Houston, TX 77044"], "Contacts": ["713-987-4006"], "ScheduledVisit": null, "Notes": ""}, {"id": 71, "Doctor Name": "Multiple", "Specialty": "Nephrology", "Practice Name": "Houston Renal Group", "Status": "Follow Up", "History": [{"date": "4/9/2026", "type": "Site Visit", "notes": "Dropped off marketing materials - will follow up with receptionist"}], "Next Follow-Up": "", "Addresses": ["2201 W Holcoimbe Blvd, Suite 320, Houston, TX 77030"], "Contacts": ["346-570-1700"], "ScheduledVisit": null, "Notes": ""}, {"id": 72, "Doctor Name": "Marializa V. Bernardo, MD", "Specialty": "Nephrology", "Practice Name": "Southwest Nephrology Associates LLP", "Status": "Follow Up", "History": [{"date": "10/30/2025", "type": "Site Visit", "notes": "There was an attempt to reach out, but since it was inside a memorial herman hospital. Also there was no receptionist at the front desk"}], "Next Follow-Up": "", "Addresses": ["7777 Southwest Fwy suite 304, Houston, TX 77074"], "Contacts": ["(713) 270-4545"], "ScheduledVisit": null, "Notes": ""}, {"id": 73, "Doctor Name": "Caleb Chen, MD", "Specialty": "Nephrology", "Practice Name": "Southwest Nephrology Associates LLP", "Status": "Follow Up", "History": [{"date": "10/30/2025", "type": "Site Visit", "notes": "There was an attempt to reach out, but since it was inside a memorial herman hospital. Also there was no receptionist at the front desk"}], "Next Follow-Up": "", "Addresses": ["7777 Southwest Fwy suite 304, Houston, TX 77074"], "Contacts": ["(713) 270-4545"], "ScheduledVisit": null, "Notes": ""}, {"id": 74, "Doctor Name": "Andres H Keichian, MD", "Specialty": "Nephrology", "Practice Name": "Personal Office (Nephrology)", "Status": "Follow Up", "History": [{"date": "11/20/2025", "type": "Site Visit", "notes": "Delivered the Pamphlet and gave our contact detail; will follow up with receptionist Rose and email dr saying we have worked together before, give list of trials, ways he can participate, and set up a meet. 11/21/2025 sent email with prolato information. 11/25/2025 sent followup email asking to meet."}], "Next Follow-Up": "", "Addresses": ["3003 S Loop W, Houston, TX 77054"], "Contacts": ["Keichian@AHKNeurology.com"], "ScheduledVisit": null, "Notes": ""}, {"id": 75, "Doctor Name": "June Yao, MD", "Specialty": "Nephrology", "Practice Name": "Renal Specialists of Houston", "Status": "Follow Up", "History": [{"date": "12/9/2025", "type": "", "notes": ""}], "Next Follow-Up": "", "Addresses": ["1213 Herman Dr Ste 540, Houston TX 77004"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 76, "Doctor Name": "Han Dang, MD", "Specialty": "Nephrology", "Practice Name": "Global Kidney Center PLLC", "Status": "DNC", "History": [{"date": "12/9/2025", "type": "Site Visit", "notes": "Visited office with Humaira and dropped off NefXtend materials. Office will contact us if their nephrologists are interested in participating in research. Followed up on 12/12 and Anika Porter (their practice administrator) and they stated not interested - they have their own research center. Explained the trial and benefits, but still not interested."}], "Next Follow-Up": "", "Addresses": ["2525 N Loop W Suite 600, Houston TX 77008"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 77, "Doctor Name": "Thang Nguyen, MD", "Specialty": "Nephrology", "Practice Name": "Global Kidney Center PLLC", "Status": "DNC", "History": [{"date": "12/9/2025", "type": "Site Visit", "notes": "Visited office with Humaira and dropped off NefXtend materials. Office will contact us if their nephrologists are interested in participating in research. Followed up on 12/12 and Anika Porter (their practice administrator) and they stated not interested - they have their own research center. Explained the trial and benefits, but still not interested."}], "Next Follow-Up": "", "Addresses": ["2525 N Loop W Suite 600, Houston TX 77008"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 78, "Doctor Name": "Nguyen Thu, MD", "Specialty": "Nephrology", "Practice Name": "Global Kidney Center PLLC", "Status": "DNC", "History": [{"date": "12/9/2025", "type": "Site Visit", "notes": "Visited office with Humaira and dropped off NefXtend materials. Office will contact us if their nephrologists are interested in participating in research. Followed up on 12/12 and Anika Porter (their practice administrator) and they stated not interested - they have their own research center. Explained the trial and benefits, but still not interested."}], "Next Follow-Up": "", "Addresses": ["2525 N Loop W Suite 600, Houston TX 77008"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 79, "Doctor Name": "Washington Sereatan, MD", "Specialty": "Nephrology", "Practice Name": "Global Kidney Center PLLC", "Status": "DNC", "History": [{"date": "12/9/2025", "type": "Site Visit", "notes": "Visited office with Humaira and dropped off NefXtend materials. Office will contact us if their nephrologists are interested in participating in research. Followed up on 12/12 and Anika Porter (their practice administrator) and they stated not interested - they have their own research center. Explained the trial and benefits, but still not interested. ."}], "Next Follow-Up": "", "Addresses": ["2525 N Loop W Suite 600, Houston TX 77008"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 80, "Doctor Name": "Kim Horn, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Status": "Follow Up", "History": [{"date": "12/9/2025", "type": "Site Visit", "notes": "Visited office with Humaira and dropped off NefXtend materials. Office will contact us if Dr. Horn is interested. Not sure if they have Tarpeyo pts. Followed up on 12/12 with a call and front desk said she will leave our folder on Dr. Horn's desk with note to reply if she wants us to come in and explain the trial to her. Will followup the week of 12/14."}], "Next Follow-Up": "", "Addresses": ["1415 North Loop West Suite 105, Houston TX 77008"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 81, "Doctor Name": "Adil Au, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Status": "Follow Up", "History": [{"date": "", "type": "", "notes": "Reach out for NefXtend study"}], "Next Follow-Up": "", "Addresses": ["915 Gressler, Houston TX 77024"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 82, "Doctor Name": "Vijayaprakash Sreenarasimhaiah, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Status": "Follow Up", "History": [{"date": "", "type": "", "notes": "Reach out for NefXtend study"}], "Next Follow-Up": "", "Addresses": ["915 Gressler, Houston TX 77024"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 83, "Doctor Name": "Jinwoo Jung, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Status": "Developing", "History": [{"date": "12/9/2025", "type": "Site Visit", "notes": "Same office as Dr. Spencer Su - received Michelle's (manager) cell number and tentatively scheduled a meeting Jan 14. Will reachout and confirm lunch and learn with the nephrologists."}], "Next Follow-Up": "", "Addresses": ["7500 Beechnut St ste 262, Houston TX 77074"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 84, "Doctor Name": "Syed Kadri, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Status": "Follow Up", "History": [{"date": "12/3/2025", "type": "Site Visit", "notes": "Visited office with Humaira and dropped off PCRC materials, front desk requested we call next week to ask their status on whether they want to move forward or not. Will follow up week of 12/7."}], "Next Follow-Up": "", "Addresses": ["607 Timberdale Lane, Suite 201"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 85, "Doctor Name": "Madhavilatha Vuppali, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Status": "Follow Up", "History": [{"date": "", "type": "", "notes": "Reach out for NefXtend study"}], "Next Follow-Up": "", "Addresses": ["200 S. Rivershire Dr ste 300"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 86, "Doctor Name": "Anthony Hanson, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Status": "Follow Up", "History": [{"date": "", "type": "", "notes": "Reach out for NefXtend study"}], "Next Follow-Up": "", "Addresses": ["19502 Mckay Dr"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 87, "Doctor Name": "Adam Frome, MD", "Specialty": "Nephrology", "Practice Name": "Kidney Specialists of North Houston", "Status": "DNC", "History": [{"date": "12/3/2025", "type": "Site Visit", "notes": "Visited office with Humaira and dropped off PCRC materials, but front desk stated they work with Davita research already."}], "Next Follow-Up": "", "Addresses": ["129 Vision Park #109"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 88, "Doctor Name": "Syed Zaidi, MD", "Specialty": "Nephrology", "Practice Name": "Kidney Specialists of North Houston", "Status": "DNC", "History": [{"date": "12/3/2025", "type": "Site Visit", "notes": "Visited office with Humaira and dropped off PCRC materials, but front desk stated they work with Davita research already."}], "Next Follow-Up": "", "Addresses": ["129 Vision Park #109"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 89, "Doctor Name": "Harini Bejjanki, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Status": "Follow Up", "History": [{"date": "", "type": "", "notes": "Reach out for NefXtend study"}], "Next Follow-Up": "", "Addresses": ["17191 St. Luke's Way Ste 260"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 90, "Doctor Name": "Djas Naik, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Status": "DNC", "History": [{"date": "12/3/2025", "type": "Site Visit", "notes": "Visited office with Humaira and dropped off PCRC materials, but front desk stated they work with Davita research already."}], "Next Follow-Up": "", "Addresses": ["129 Vision Park #109"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 91, "Doctor Name": "Shahzeb Naqvi, MD", "Specialty": "Nephrology", "Practice Name": "Personal Practice", "Status": "Developing", "History": [{"date": "12/3/2025", "type": "Site Visit", "notes": "Visited office with Humaira and met/discussed with Dr. Naqvi details of the NefXtend trial - as of 12/4/25, he is connected with Zohra for service agreement details, awaiting response. Followed up via call on 12/9 and phone operator stated office was closed that day. Will follow up on 12/10."}], "Next Follow-Up": "", "Addresses": ["150 Pine Forest Drive Suite 102"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 92, "Doctor Name": "Archana Goel, MD", "Specialty": "Nephrology", "Practice Name": "Nephrology Associates (Kidney Care Specialists)", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["9501 State Avenue, Suite 1, Kansas City, KS 66111"], "Contacts": ["913-441-5757"], "ScheduledVisit": null, "Notes": ""}, {"id": 93, "Doctor Name": "Multiple", "Specialty": "Nephrology", "Practice Name": "Almeda Clinic - Greater Houston Kidney Specialists", "Status": "Follow Up", "History": [{"date": "", "type": "", "notes": "Visited office and shared pamphlets with both sides of the clinic - Dr. Ralph Ronald + Greater Houston Kidney Specialist. Followed up via email on 6/25."}], "Next Follow-Up": "", "Addresses": ["7015 Almeda Rd, Houston, TX 77054"], "Contacts": ["Jeanettet@boson360.com"], "ScheduledVisit": null, "Notes": ""}, {"id": 94, "Doctor Name": "Dr. Vanderlick, Dr. Irr + team", "Specialty": "Neurology", "Practice Name": "Neurology Consultants of Houston", "Status": "Follow Up", "History": [{"date": "5/14/2026", "type": "", "notes": "closest (by Wajeeha)"}], "Next Follow-Up": "", "Addresses": ["6700 W Loop S, #400, Bellaire, TX 77401"], "Contacts": ["713-795-4785"], "ScheduledVisit": null, "Notes": ""}, {"id": 95, "Doctor Name": "Dr. Kathleen Eberle + team", "Specialty": "Neurology", "Practice Name": "Houston Neurological Institute", "Status": "Follow Up", "History": [{"date": "5/14/2026", "type": "", "notes": "Pearland (south 15 min)"}], "Next Follow-Up": "", "Addresses": ["10905 Memorial Hermann Dr #115, Pearland, TX 77584"], "Contacts": ["281-922-7222"], "ScheduledVisit": null, "Notes": ""}, {"id": 96, "Doctor Name": "Dr. Madhureeta Achari", "Specialty": "Neurology", "Practice Name": "Integrated Neurology", "Status": "Follow Up", "History": [{"date": "5/14/2026", "type": "", "notes": "North (23 min)"}], "Next Follow-Up": "", "Addresses": ["1411 Heights Blvd, Houston, TX 77008"], "Contacts": ["832-793-7530"], "ScheduledVisit": null, "Notes": ""}, {"id": 97, "Doctor Name": "Multiple", "Specialty": "Neurology", "Practice Name": "The Neurology Center", "Status": "Follow Up", "History": [{"date": "5/14/2026", "type": "", "notes": "Medical Center (max 8 min) - theres also a dermatologist in the same building (ask around for future trials!)"}], "Next Follow-Up": "", "Addresses": ["6655 Travis St, Suite 600, Houston, TX 77030"], "Contacts": ["713-795-0074"], "ScheduledVisit": null, "Notes": ""}, {"id": 98, "Doctor Name": "Patricia L Gutowski, NP", "Specialty": "Nurse Practitioner", "Practice Name": "", "Status": "Follow Up", "History": [{"date": "11/21/2025", "type": "Email", "notes": "Talked to operator and will forward our infomation to drbedros@fhdks.com, Dr. Bedros is their medical director. 11/28/25: Followed up via email."}], "Next Follow-Up": "", "Addresses": ["1133 College Ave Ste B, Manhattan, KS 66502"], "Contacts": ["+1 785-565-9500"], "ScheduledVisit": null, "Notes": ""}, {"id": 99, "Doctor Name": "Ajay Aggarwal, MD", "Specialty": "Pain Management", "Practice Name": "Personal Practice (pain management physician)", "Status": "Follow Up", "History": [{"date": "12/4/2025", "type": "Site Visit", "notes": "Dr. Aggarwal\u0092s primary contact is Jenny, the office administrator, whose email and phone number we have on file. Dr. Aggarwal does not currently have any research affiliations and is typically in the office on Saturdays, with varying weekday availability. contact number # (713)663-7246. email: officegroup@backpain2020.com"}], "Next Follow-Up": "", "Addresses": ["2010 Naomi St A, Houston, TX 77054"], "Contacts": ["17136637246"], "ScheduledVisit": null, "Notes": ""}, {"id": 100, "Doctor Name": "Shahnaz A. Karim, MD", "Specialty": "Pain Management", "Practice Name": "Personal Practice (pain management physician)", "Status": "Follow Up", "History": [{"date": "12/4/2025", "type": "Site Visit", "notes": "office hours are 2:00 pm - 5:00 pm"}], "Next Follow-Up": "", "Addresses": ["10019 S Main St suite a-1, Houston, TX 77025"], "Contacts": ["17136686000"], "ScheduledVisit": null, "Notes": ""}, {"id": 101, "Doctor Name": "Pankaj Satija, MD", "Specialty": "Pain Management", "Practice Name": "Personal Practice (pain management physician)", "Status": "Follow Up", "History": [{"date": "12/4/2025", "type": "Site Visit", "notes": "For Dr. Satija, we have his phone number on file; however, direct contact has not been possible, and all communication should be routed through his office administrator via call or email. (832)-831-7800 . email: info@4saimanagement.com"}], "Next Follow-Up": "", "Addresses": ["1313 La Concha Ln, Houston, TX 77054"], "Contacts": ["18328317800"], "ScheduledVisit": null, "Notes": ""}, {"id": 102, "Doctor Name": "Sara Goel, DO", "Specialty": "Pain Management", "Practice Name": "Personal Practice (pain management physician)", "Status": "Follow Up", "History": [{"date": "12/4/2025", "type": "Site Visit", "notes": "unable to meet. closed for the holidays"}], "Next Follow-Up": "", "Addresses": ["7700 Main St Suite 400, Houston, TX 77030"], "Contacts": ["13462304070"], "ScheduledVisit": null, "Notes": ""}, {"id": 103, "Doctor Name": "Hui Kang, MD", "Specialty": "Pain Management", "Practice Name": "Houston Pain Specialists", "Status": "Follow Up", "History": [{"date": "12/4/2025", "type": "Site Visit", "notes": "unable to meet. closed for the holidays"}], "Next Follow-Up": "", "Addresses": ["5420 Dashwood Dr # 103, Houston, TX 77081"], "Contacts": ["17136642662"], "ScheduledVisit": null, "Notes": ""}, {"id": 104, "Doctor Name": "Asif Chaudhry, MD", "Specialty": "Pain Management", "Practice Name": "Houston Pain and Spine", "Status": "Follow Up", "History": [{"date": "12/4/2025", "type": "Site Visit", "notes": "unable to meet"}], "Next Follow-Up": "", "Addresses": ["2100 W Loop S #400, Houston, TX 77027"], "Contacts": ["18324364040"], "ScheduledVisit": null, "Notes": ""}, {"id": 105, "Doctor Name": "Dr. Choudri, MD", "Specialty": "Pain Management", "Practice Name": "Greater Houston Interventional Pain Management Associates", "Status": "Follow Up", "History": [{"date": "12/4/2025", "type": "Site Visit", "notes": "Dr. Mobeen is only available on Tuesdays. has 3 other locations. email contact: Mchoudri@ghpain.com"}], "Next Follow-Up": "", "Addresses": ["4747 Bellaire Blvd #101, Bellaire, TX 77401"], "Contacts": ["17136221700"], "ScheduledVisit": null, "Notes": ""}, {"id": 106, "Doctor Name": "Dr. Montero-Baker + team", "Specialty": "Podiatry", "Practice Name": "HOPE Vascular & Podiatry", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["7501 Fannin St, Suite 600 & 650, Houston, TX 77054"], "Contacts": ["346-400-46763"], "ScheduledVisit": null, "Notes": ""}, {"id": 107, "Doctor Name": "Multiple", "Specialty": "Podiatry", "Practice Name": "Home WoundCare Center", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["ERROR: INTERNAL SERVER ERROR 500"], "Contacts": ["346-494-8274"], "ScheduledVisit": null, "Notes": ""}, {"id": 108, "Doctor Name": "Multiple", "Specialty": "Podiatry", "Practice Name": "Vital Podiatry", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["13636 Breton Ridge St, Suite D, Houston, TX 77070"], "Contacts": ["281-937-4546"], "ScheduledVisit": null, "Notes": ""}, {"id": 109, "Doctor Name": "Multiple", "Specialty": "Podiatry", "Practice Name": "Westside Podiatry", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["13114 FM 1960 Rd, Suite 100, Houston, TX 77065"], "Contacts": ["281-859-6100"], "ScheduledVisit": null, "Notes": ""}, {"id": 110, "Doctor Name": "Dr. Leisten, Dr. Haase", "Specialty": "Podiatry", "Practice Name": "Diagnostic Foot Specialists", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["1631 North Loop West, Suite 470, Houston, TX 77008"], "Contacts": ["713-862-3338"], "ScheduledVisit": null, "Notes": ""}, {"id": 111, "Doctor Name": "Dr. Bao Nguyen", "Specialty": "Rheumatology", "Practice Name": "Houston Comprehensive Rheumatology", "Status": "Follow Up", "History": [{"date": "9/22/2025", "type": "Email", "notes": ""}], "Next Follow-Up": "", "Addresses": ["9717 Jones Rd Suite 200, Houston, TX 77065", "9717 Jones Rd, Suite 200, Houston, TX 77065"], "Contacts": ["info@houstoncomprehensiverheumatology.com", "832-688-9463"], "ScheduledVisit": null, "Notes": ""}, {"id": 112, "Doctor Name": "Dr. Khawari", "Specialty": "Rheumatology", "Practice Name": "Rheumatology Associates Houston", "Status": "DNC", "History": [{"date": "11/6/2025", "type": "Site Visit", "notes": "Delivered the Pamphlet and a Donut Box. already has a clinical research site internally. set up a physician luch with them on december 18th"}, {"date": "9/22/2025", "type": "Site Visit", "notes": "Delivered the Pamphlet and a Donut Box. they are already working with a clinical research site."}], "Next Follow-Up": "", "Addresses": ["777 S Fry Rd Suite 208, Katy, TX 77450", "777 S Fry Rd #208, Katy, TX 77450"], "Contacts": ["appointment@rheumatologyassociateshouston.com", "(281) 652-5943"], "ScheduledVisit": null, "Notes": ""}, {"id": 113, "Doctor Name": "Dr. Seema Malani", "Specialty": "Rheumatology", "Practice Name": "Arthritis Clinic of Katy", "Status": "DNC", "History": [{"date": "11/6/2025", "type": "Site Visit", "notes": "Delivered the Pamphlet and a Donut Box. they are already working with a clinical research site."}, {"date": "9/22/2025", "type": "Site Visit", "notes": "Delivered the Pamphlet and a Donut Box. they are already working with a clinical research site."}], "Next Follow-Up": "", "Addresses": ["2630 N Mason Rd A2, Katy, TX 77449"], "Contacts": ["contact@arthritisclinicofkaty.com", "281) 712-8360"], "ScheduledVisit": null, "Notes": ""}, {"id": 114, "Doctor Name": "Dr. Aman Kyugasia", "Specialty": "Rheumatology", "Practice Name": "Arthritis Clinic of Katy", "Status": "DNC", "History": [{"date": "11/6/2025", "type": "Site Visit", "notes": "Delivered the Pamphlet and a Donut Box. they are already working with a clinical research site."}, {"date": "9/23/2025", "type": "Site Visit", "notes": "Delivered the Pamphlet and a Donut Box. they are already working with a clinical research site."}], "Next Follow-Up": "", "Addresses": ["2630 N Mason Rd A2, Katy, TX 77449"], "Contacts": ["contact@arthritisclinicofkaty.com", "281) 712-8360"], "ScheduledVisit": null, "Notes": ""}, {"id": 115, "Doctor Name": "Amber khan", "Specialty": "Rheumatology", "Practice Name": "Houston Rheumatology Institute", "Status": "Follow Up", "History": [{"date": "9/30/2025", "type": "Email", "notes": ""}], "Next Follow-Up": "", "Addresses": ["2222 Greenhouse Rd Bldg #1300, Houston, TX 77084"], "Contacts": ["info@hrihealth.com"], "ScheduledVisit": null, "Notes": ""}, {"id": 116, "Doctor Name": "Ramona Mihu, MD", "Specialty": "Rheumatology", "Practice Name": "Heights Rheumatology P.A.", "Status": "Follow Up", "History": [{"date": "9/30/2025", "type": "Email", "notes": ""}], "Next Follow-Up": "", "Addresses": [], "Contacts": ["rmihu@heightsrheumatology.com"], "ScheduledVisit": null, "Notes": ""}, {"id": 117, "Doctor Name": "Dr. Hernandez", "Specialty": "Rheumatology", "Practice Name": "Fort Bend Rheumatology Associates", "Status": "Follow Up", "History": [{"date": "9/30/2025", "type": "Email", "notes": "incorrect email"}], "Next Follow-Up": "", "Addresses": ["7616 Branford Place suite 320, sugarland texas"], "Contacts": ["johnlong@fbratx.com"], "ScheduledVisit": null, "Notes": ""}, {"id": 118, "Doctor Name": "Sean Menga, MD", "Specialty": "Rheumatology", "Practice Name": "Primer Rheumatology (The Woodlands)", "Status": "Follow Up", "History": [{"date": "9/30/2025", "type": "Email", "notes": ""}], "Next Follow-Up": "", "Addresses": [], "Contacts": ["info@primerheumatology.com"], "ScheduledVisit": null, "Notes": ""}, {"id": 119, "Doctor Name": "Pavan Bachireddy, MD", "Specialty": "Rheumatology", "Practice Name": "Rheumatology Clinic of Houston (Tomball)", "Status": "Follow Up", "History": [{"date": "9/30/2025", "type": "Email", "notes": ""}], "Next Follow-Up": "", "Addresses": [], "Contacts": ["pb@houstonrheumatology.com"], "ScheduledVisit": null, "Notes": ""}, {"id": 120, "Doctor Name": "Tamar F. Brionez, MD", "Specialty": "Rheumatology", "Practice Name": "Advanced Rheumatology of Houston", "Status": "Follow Up", "History": [{"date": "9/30/2025", "type": "Email", "notes": ""}], "Next Follow-Up": "", "Addresses": ["10857 Kuykendahl Rd Suite 120, The Woodlands, TX 77382"], "Contacts": ["info@advancedrheum.com"], "ScheduledVisit": null, "Notes": ""}, {"id": 121, "Doctor Name": "Wajeeha Yousaf", "Specialty": "Rheumatology", "Practice Name": "Rheumatology Care Center", "Status": "Established", "History": [{"date": "10/8/2025", "type": "Site Visit", "notes": "Signed Service Agreement with us."}, {"date": "11/13/2025", "type": "Site Visit", "notes": "Delivered the Pamphlet and also scheduled a lunch on the 17th at noon. Will followup with their front desk for more details."}], "Next Follow-Up": "", "Addresses": ["6300 W Loop S # 333, Bellaire, TX 77401"], "Contacts": ["info@rccbellaire.com"], "ScheduledVisit": null, "Notes": ""}, {"id": 122, "Doctor Name": "Dr. Hema Salvady", "Specialty": "Rheumatology", "Practice Name": "Texas Rheumatology", "Status": "Follow Up", "History": [{"date": "10/21/2025", "type": "Call", "notes": "left a voicemail"}], "Next Follow-Up": "", "Addresses": ["3725 E League City Pkwy Suite 200, League City, TX 77573 / 4427 Crenshaw Rd Suite 100, Pasadena, TX 77504"], "Contacts": ["281-957-9127"], "ScheduledVisit": null, "Notes": ""}, {"id": 123, "Doctor Name": "Dr. Prashant Sunkureddi", "Specialty": "Rheumatology", "Practice Name": "Texas Rheumatology", "Status": "Follow Up", "History": [{"date": "10/21/2025", "type": "Call", "notes": "left a voicemail"}], "Next Follow-Up": "", "Addresses": ["3725 E League City Pkwy Suite 200, League City, TX 77573 / 4427 Crenshaw Rd Suite 100, Pasadena, TX 77504"], "Contacts": ["281-957-9127"], "ScheduledVisit": null, "Notes": ""}, {"id": 124, "Doctor Name": "Dr. Tara J. Rizvi", "Specialty": "Rheumatology", "Practice Name": "Texas Arthritis & Rheumatology Associates", "Status": "Follow Up", "History": [{"date": "10/21/2025", "type": "Site Visit", "notes": "Delivered the Pamphlet and a Donut Box. She was busy with her patients we got the main contact for her front desk person: Jesus. 346-257-4300."}, {"date": "11/6/2025", "type": "Site Visit", "notes": "Delivered the Pamphlet and a Donut Box. She was busy with her patients we got the main contact for her front desk person: Jesus. 346-257-4300."}], "Next Follow-Up": "", "Addresses": ["714 S Peek Road, Katy, TX 77450", "714 South Peek Road, Katy, TX 77450"], "Contacts": ["346-257-4300", "(346)-257- 4300"], "ScheduledVisit": null, "Notes": ""}, {"id": 125, "Doctor Name": "Dr. S. Arif Ali", "Specialty": "Rheumatology", "Practice Name": "Northwest Houston Arthritis Center", "Status": "Follow Up", "History": [{"date": "10/21/2025", "type": "Call", "notes": "failed attempt"}], "Next Follow-Up": "", "Addresses": ["17045 St. Edwards Drive Ste 110, Houston, TX 77070 / 455 School St., Suite 27, Tomball, TX 77375"], "Contacts": ["281-397-9198"], "ScheduledVisit": null, "Notes": ""}, {"id": 126, "Doctor Name": "Dr. Adnan Peer", "Specialty": "Rheumatology", "Practice Name": "Northwest Houston Arthritis Center", "Status": "Follow Up", "History": [{"date": "10/21/2025", "type": "Call", "notes": "failed attempt"}], "Next Follow-Up": "", "Addresses": ["17045 St. Edwards Drive Ste 110, Houston, TX 77070 / 455 School St., Suite 27, Tomball, TX 77375"], "Contacts": ["281-397-9198"], "ScheduledVisit": null, "Notes": ""}, {"id": 127, "Doctor Name": "Dr. Iqtidar Hanif", "Specialty": "Rheumatology", "Practice Name": "Northwest Houston Arthritis Center", "Status": "Follow Up", "History": [{"date": "10/21/2025", "type": "Call", "notes": "failed attempt"}], "Next Follow-Up": "", "Addresses": ["17045 St. Edwards Drive Ste 110, Houston, TX 77070 / 455 School St., Suite 27, Tomball, TX 77375"], "Contacts": ["281-397-9198"], "ScheduledVisit": null, "Notes": ""}, {"id": 128, "Doctor Name": "Dr. Qaiser Rehman", "Specialty": "Rheumatology", "Practice Name": "Rheumatology Clinic of Houston", "Status": "Follow Up", "History": [{"date": "10/21/2025", "type": "Call", "notes": "left a voicemail"}], "Next Follow-Up": "", "Addresses": ["17134 North Eldridge Parkway Suite A, Tomball, TX 77377", "17134 N Eldridge Pkwy, Suite A, Tomball, TX 77377"], "Contacts": ["832-237-8585", "832-979-5090"], "ScheduledVisit": null, "Notes": ""}, {"id": 129, "Doctor Name": "Dr. Leila Muhieddine", "Specialty": "Rheumatology", "Practice Name": "Namieta Janssen MD PLLC", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["1327 Lake Pointe Pkwy Suite 325, Sugar Land, TX 77478"], "Contacts": ["832-500-5002"], "ScheduledVisit": null, "Notes": ""}, {"id": 130, "Doctor Name": "Dr. Namieta Janssen", "Specialty": "Rheumatology", "Practice Name": "Namieta Janssen MD PLLC", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["1327 Lake Pointe Pkwy Suite 325, Sugar Land, TX 77478"], "Contacts": ["832-500-5002"], "ScheduledVisit": null, "Notes": ""}, {"id": 131, "Doctor Name": "Sabeen Najam MD", "Specialty": "Rheumatology", "Practice Name": "Houston Rheumatology Center", "Status": "Follow Up", "History": [{"date": "10/30/2025", "type": "Site Visit", "notes": "Delivered the Pamphlet and a Donut Box. She is out bof office till Nov 10th. Office times Mondays (9 am-4 pm). research site in Baytown. Email for outreach: snajam@hrcclinic.com. 11/28/25: Followed up via email."}, {"date": "10/30/2025", "type": "Site Visit", "notes": "Delivered the Pamphlet and a Donut Box. She is out bof office till Nov 10th. Office times Mondays (9 am-4 pm). research site in Baytown. Email for outreach: snajam@hrcclinic.com"}], "Next Follow-Up": "", "Addresses": ["7102 Tarrington Ave #103, Sugarland, tx, 77479"], "Contacts": ["281-422-7179, snajam@hrcclinic.com", "281-422-7179"], "ScheduledVisit": null, "Notes": ""}, {"id": 132, "Doctor Name": "S. Jeffrey Cannella, MD", "Specialty": "Rheumatology", "Practice Name": "Space City Pain", "Status": "Follow Up", "History": [{"date": "11/10/2025", "type": "Site Visit", "notes": "Connection via Dr. Eisenberg."}], "Next Follow-Up": "", "Addresses": ["17448 Highway 3, Suite 136, Webster, TX 77598"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 133, "Doctor Name": "Alfredo Sardinas Jr., MD", "Specialty": "Rheumatology", "Practice Name": "Personal Practice", "Status": "DNC", "History": [{"date": "11/18/2025", "type": "Call", "notes": "Left a voicemail, assistant of dr. expressed Dr. Sardinas not interested - to check back in 6-8 months."}], "Next Follow-Up": "", "Addresses": ["427 W 20th St Suite 220, Houston, TX 77008"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 134, "Doctor Name": "Suong M Tran, MD", "Specialty": "Rheumatology", "Practice Name": "The Sunset Clinic", "Status": "Follow Up", "History": [{"date": "11/18/2025", "type": "Call", "notes": "Left a voicemail - will plan to visit in morning for Thursday BD visit. --> Go to Physician Walk In Planner"}], "Next Follow-Up": "", "Addresses": ["Medical Clinic of Houston, LLP, aka \"The Sunset Clinic, 1701 Sunset Blvd 4th Floor, Houston, TX 77005"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 135, "Doctor Name": "Dr. Chimata", "Specialty": "Rheumatology", "Practice Name": "Katy Rheumatology & Associates", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["402 Park Grove Dr, Katy, TX 77450"], "Contacts": ["281-941-6923"], "ScheduledVisit": null, "Notes": ""}, {"id": 136, "Doctor Name": "Dr. Alikhan, Dr. Iversen, Dr. Tran", "Specialty": "Rheumatology", "Practice Name": "Medical Clinic of Houston (Rheum Div)", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["1701 Sunset Blvd, Houston, TX 77005"], "Contacts": ["713-526-5511"], "ScheduledVisit": null, "Notes": ""}, {"id": 137, "Doctor Name": "Dr. Tamar Brionez", "Specialty": "Rheumatology", "Practice Name": "Advanced Rheumatology of Houston", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["10875 Kuykendahl Rd, Suite #120, The Woodlands, TX 77382"], "Contacts": ["281-766-7886"], "ScheduledVisit": null, "Notes": ""}, {"id": 138, "Doctor Name": "J. Edward Hernandez, MD", "Specialty": "Rheumatology", "Practice Name": "Fort Bend Rheumatology Associates", "Status": "Follow Up", "History": [{"date": "10/30/2025", "type": "Site Visit", "notes": "Delivered the Pamphlet and a Donut Box. They have a clinicial research site that was started this year . Doctors usually visit on Fridays. Main person to contact would be (John Long (COO) email: Johnlong@fbratx.com , contact : 281-980-1742 , fax 281-980-1754"}], "Next Follow-Up": "", "Addresses": ["7616 Branford Place suite 320, sugarland texas"], "Contacts": ["281-980-1742"], "ScheduledVisit": null, "Notes": ""}, {"id": 139, "Doctor Name": "Nasha Nansey, MD", "Specialty": "Rheumatology", "Practice Name": "Fort Bend Rheumatology Associates", "Status": "Follow Up", "History": [{"date": "10/30/2025", "type": "Site Visit", "notes": "Delivered the Pamphlet and a Donut Box. They have a clinicial research site that was started this year . Doctors usually visit on Fridays. Main person to contact would be (John Long) email: Johnlong@fbratx.com , contact : 281-980-1742 , fax 281-980-1755"}], "Next Follow-Up": "", "Addresses": ["7616 Branford Place suite 320, sugarland texas"], "Contacts": ["281-980-1742"], "ScheduledVisit": null, "Notes": ""}, {"id": 140, "Doctor Name": "Ryan Valicek, MD", "Specialty": "Rheumatology", "Practice Name": "Fort Bend Rheumatology Associates", "Status": "Follow Up", "History": [{"date": "10/30/2025", "type": "Site Visit", "notes": "Delivered the Pamphlet and a Donut Box. They have a clinicial research site that was started this year . Doctors usually visit on Fridays. Main person to contact would be (John Long) email: Johnlong@fbratx.com , contact : 281-980-1742 , fax 281-980-1756"}], "Next Follow-Up": "", "Addresses": ["7616 Branford Place suite 320, sugarland texas"], "Contacts": ["281-980-1742"], "ScheduledVisit": null, "Notes": ""}, {"id": 141, "Doctor Name": "Abida Hassan", "Specialty": "Rheumatology", "Practice Name": "Texas Arthritis & Rheumatology Associates", "Status": "Follow Up", "History": [{"date": "11/7/2025", "type": "Site Visit", "notes": "Delivered the Pamphlet and a Donut Box. She was busy with her patients we got the main contact for her front desk person: Jesus. 346-257-4300."}], "Next Follow-Up": "", "Addresses": ["715 South Peek Road, Katy, TX 77450"], "Contacts": ["(346)-257- 4301"], "ScheduledVisit": null, "Notes": ""}, {"id": 142, "Doctor Name": "Dr .Ramona mihu", "Specialty": "Rheumatology", "Practice Name": "Heights Rheumatology", "Status": "Follow Up", "History": [{"date": "11/13/2025", "type": "Site Visit", "notes": "Delivered the Pamphlet and gave our contact detail"}], "Next Follow-Up": "", "Addresses": ["204 W 19th Street, Suite 200, Houston TX 77008"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 143, "Doctor Name": "Dr. Suong M Tran", "Specialty": "Rheumatology", "Practice Name": "The Sunset Clinic", "Status": "Follow Up", "History": [{"date": "11/20/2025", "type": "Site Visit", "notes": "Delivered the Pamphlet and gave our contact detail; will follow up via call on 11/21"}], "Next Follow-Up": "", "Addresses": ["1701 Sunset Blvd 4th Floor, Houston, TX 77005"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 144, "Doctor Name": "Naureen Alim", "Specialty": "Rheumatology", "Practice Name": "CLS Health Rheumatology Associates", "Status": "Follow Up", "History": [{"date": "11/20/2025", "type": "Site Visit", "notes": "Delivered the Pamphlet and gave our contact detail; will follow up via call on 11/21"}], "Next Follow-Up": "", "Addresses": ["4615 SW Freeway Service Rd 10th Floor, Houston, TX 77027"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 145, "Doctor Name": "Jacqueline Vo, MD", "Specialty": "Rheumatology", "Practice Name": "Rheumatology Center of Houston - Pearland", "Status": "DNC", "History": [{"date": "12/10/2025", "type": "Site Visit", "notes": "Visited office with Muznah and dropped off PCRC materials. The Dr in (Dr. Vo) was not interested in talking or meeting with us. Front desk will be in contact if their other rheum (Dr. Wang) is interested. Will followup the week of 12/14."}], "Next Follow-Up": "", "Addresses": ["10907 Memorial Hermann Dr Suite 300, Pearland, TX 77584"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 146, "Doctor Name": "Haihui Wang, MD, PhD", "Specialty": "Rheumatology", "Practice Name": "Rheumatology Center of Houston - Pearland", "Status": "DNC", "History": [{"date": "12/10/2025", "type": "Site Visit", "notes": "Visited office with Muznah and dropped off PCRC materials. The Dr in (Dr. Vo) was not interested in talking or meeting with us. Front desk will be in contact if their other rheum (Dr. Wang) is interested. Will followup the week of 12/14."}], "Next Follow-Up": "", "Addresses": ["10907 Memorial Hermann Dr Suite 300, Pearland, TX 77584"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 147, "Doctor Name": "Ehizogie Edigin, MD", "Specialty": "Rheumatology", "Practice Name": "LIfestyle Rheumatology Clinic", "Status": "Follow Up", "History": [{"date": "12/10/2025", "type": "Site Visit", "notes": "Office Manager, Mija Simpson (215-285-8679 / msimpson@medcoshare.com), stated Dr. Edigin just started at MedCoShare and is part time, not sure when he comes in. Provided Dr contact info: Ehizogie Edigin at ediginehizogie@yahoo.com. Followed up via email on 12/10."}], "Next Follow-Up": "", "Addresses": ["3129 Kingsley Dr suite 1940, Pearland, TX 77584"], "Contacts": ["ediginehizogie@yahoo.com"], "ScheduledVisit": null, "Notes": ""}, {"id": 148, "Doctor Name": "Prashanth Sunkureddi, MD", "Specialty": "Rheumatology", "Practice Name": "Texas Rheumatology", "Status": "Follow Up", "History": [{"date": "12/10/2025", "type": "Site Visit", "notes": "unable to meet - office closed on 12/10"}], "Next Follow-Up": "", "Addresses": ["11555 Magnolia Pkwy Suite 110, Pearland, TX 77584"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 149, "Doctor Name": "Hema Salvady, MD", "Specialty": "Rheumatology", "Practice Name": "Texas Rheumatology", "Status": "Follow Up", "History": [{"date": "12/10/2025", "type": "Site Visit", "notes": "unable to meet - office closed on 12/10"}], "Next Follow-Up": "", "Addresses": ["11555 Magnolia Pkwy Suite 110, Pearland, TX 77584"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 150, "Doctor Name": "Deepika Arora, MD", "Specialty": "Rheumatology", "Practice Name": "Texas Rheumatology", "Status": "Follow Up", "History": [{"date": "12/10/2025", "type": "Site Visit", "notes": "unable to meet - office closed on 12/10"}], "Next Follow-Up": "", "Addresses": ["11555 Magnolia Pkwy Suite 110, Pearland, TX 77584"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 151, "Doctor Name": "Dany Thekkemuriyil, MD", "Specialty": "Rheumatology", "Practice Name": "Texas Rheumatology", "Status": "Follow Up", "History": [{"date": "12/10/2025", "type": "Site Visit", "notes": "unable to meet - office closed on 12/10"}], "Next Follow-Up": "", "Addresses": ["11555 Magnolia Pkwy Suite 110, Pearland, TX 77584"], "Contacts": [], "ScheduledVisit": null, "Notes": ""}, {"id": 152, "Doctor Name": "Carlos E Ramirez, MD", "Specialty": "Rheumatology", "Practice Name": "Dynamic Arthritis Care Clinic, PLLC", "Status": "Developing", "History": [{"date": "12/10/2025", "type": "Site Visit", "notes": "Met with office manager, Jessica Vera-Diaz (jdiaz.docc@gmail.com) and she stated they previously were involved in clinical research, but not anymore. The Doc is hesistant if the protocol will change the doctor treatment of his pts. Offered to schedule a lunch and learn and discuss options and details to ease skepticallity. Jessica will be in contact with us if Dr. Ramirez interested. Will follow up week of 12/14."}], "Next Follow-Up": "", "Addresses": ["1920 Country Pl Pkwy Suite 340, Pearland, TX 77584"], "Contacts": ["jdiaz.docc@gmail.com"], "ScheduledVisit": null, "Notes": ""}, {"id": 153, "Doctor Name": "Dr. Lapin, Dr. Lizarraga, Dr. Matheson, Dr. Sutton + more", "Specialty": "Urology", "Practice Name": "Houston Metro Urology", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["6560 Fannin St, Suite 1440, Scurlock Tower, Houston, TX 77030"], "Contacts": ["713-790-9700"], "ScheduledVisit": null, "Notes": ""}, {"id": 154, "Doctor Name": "Dr. Rudens Viera Galvez", "Specialty": "Family Medicine", "Practice Name": "Clinica Hispana San Houston", "Status": "Follow Up", "History": [{"date": "11/19/2025", "type": "Site Visit", "notes": "Delivered the Pamphlet and gave our contact detail"}], "Next Follow-Up": "", "Addresses": ["6060 Bellaire Blvd. Suite A Houston, TX 77081"], "Contacts": ["832-649-2169"], "ScheduledVisit": null, "Notes": ""}, {"id": 155, "Doctor Name": "", "Specialty": "Family Medicine", "Practice Name": "Clinica La Caridad", "Status": "Follow Up", "History": [{"date": "11/19/2025", "type": "Site Visit", "notes": "Delivered the Pamphlet and gave our contact detail"}], "Next Follow-Up": "", "Addresses": ["5705 Fondren Rd. Suite 101 Houston, TX 77036"], "Contacts": ["832-925-8135"], "ScheduledVisit": null, "Notes": ""}, {"id": 156, "Doctor Name": "", "Specialty": "Family Medicine", "Practice Name": "Bissonnet Medical Clinic", "Status": "Follow Up", "History": [{"date": "11/19/2025", "type": "Site Visit", "notes": "Delivered the Pamphlet and gave our contact detail"}], "Next Follow-Up": "", "Addresses": ["6069 Bissonnet St. Houston, Texas 77081"], "Contacts": ["713-587-0500"], "ScheduledVisit": null, "Notes": ""}, {"id": 157, "Doctor Name": "", "Specialty": "Family Medicine", "Practice Name": "Clinica Universal Hispana", "Status": "Follow Up", "History": [{"date": "", "type": "Site Visit", "notes": "Delivered the Pamphlet and gave our contact detail"}], "Next Follow-Up": "", "Addresses": ["11135 S Post Oak Rd. Suite D, Houston, TX 77035", "11135 S Post Oak Rd suite D Houston, TX 77035"], "Contacts": ["(832) 740-4550", "832-740-4550"], "ScheduledVisit": null, "Notes": ""}, {"id": 158, "Doctor Name": "", "Specialty": "Family Medicine", "Practice Name": "Clinica Hispana Bellaire", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["12546 Bellaire Blvd Houston, TX 77072"], "Contacts": ["832-230-4104"], "ScheduledVisit": null, "Notes": ""}, {"id": 159, "Doctor Name": "", "Specialty": "Family Medicine", "Practice Name": "Latin Clinic", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["3961 S Gessner Rd Houston, TX 77063"], "Contacts": ["832-986-5007"], "ScheduledVisit": null, "Notes": ""}, {"id": 160, "Doctor Name": "", "Specialty": "Family Medicine", "Practice Name": "Clinica Hispana", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["5950 S Gessner Rd Houston, TX 77036"], "Contacts": ["713-271-0622"], "ScheduledVisit": null, "Notes": ""}, {"id": 161, "Doctor Name": "", "Specialty": "Family Medicine", "Practice Name": "Clinica Hispana Fe y Esperanza", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["5724 Chimney Rock Rd Houston, TX 77081"], "Contacts": ["713-505-1077"], "ScheduledVisit": null, "Notes": ""}, {"id": 162, "Doctor Name": "", "Specialty": "Family Medicine", "Practice Name": "Clinica Salud Hispana", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["6611 Chimney Rock Rd Suite 2 Houston, TX 77081"], "Contacts": ["773-595-8368"], "ScheduledVisit": null, "Notes": ""}, {"id": 163, "Doctor Name": "", "Specialty": "Family Medicine", "Practice Name": "Clinica Hispana Cruz #3", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["5411 S Braeswood Blvd Houston, TX 77096"], "Contacts": ["832-353-2602"], "ScheduledVisit": null, "Notes": ""}, {"id": 164, "Doctor Name": "", "Specialty": "Family Medicine", "Practice Name": "Clinica Hispana Rubymed-Houston", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["608 S Sgt Macario Garcia D Houston, TX 77011"], "Contacts": ["281-241-8440"], "ScheduledVisit": null, "Notes": ""}, {"id": 165, "Doctor Name": "", "Specialty": "Family Medicine", "Practice Name": "Clinica Hispana Harrisburg", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["7323 Harrisburg Blvd Houston, TX 77011"], "Contacts": ["832-538-1088"], "ScheduledVisit": null, "Notes": ""}, {"id": 166, "Doctor Name": "", "Specialty": "Family Medicine", "Practice Name": "Clinica Hispana Houston", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["8470 Gulf Fwy # B1 Houston, TX 77061"], "Contacts": ["832-429-2675"], "ScheduledVisit": null, "Notes": ""}, {"id": 167, "Doctor Name": "", "Specialty": "Family Medicine", "Practice Name": "Clinica Corazon Hispano", "Status": "Follow Up", "History": [], "Next Follow-Up": "", "Addresses": ["11550 Gulf Fwy Houston, TX 77034"], "Contacts": ["713-944-0477"], "ScheduledVisit": null, "Notes": ""}, {"id": 168, "Doctor Name": "Dr. Oscar de Valle, Dr. Nixcela Ares Valdes", "Specialty": "Family Medicine", "Practice Name": "Clinica Hispana", "Status": "Follow Up", "History": [{"date": "11/19/2025", "type": "Site Visit", "notes": "Delivered the Pamphlet and gave our contact detail"}], "Next Follow-Up": "", "Addresses": ["8410 Fondren Rd. Houston, TX 77074"], "Contacts": ["Mrs. Ophelia Mendez 713-682-7066 ext. 107"], "ScheduledVisit": null, "Notes": ""}]</script>
+<script>
+const DEFAULT_RECORDS = JSON.parse(document.getElementById('app-data').textContent);
+const STORAGE_KEY = 'physician-outreach-crm-v2';
+const MAX_ATTEMPTS = 5;
+
+// Storage shim: talks to our own Express + Postgres backend instead of
+// Claude's artifact window.storage API, since this copy runs on Render.
+const storage = {
+  async get(key){
+    const res = await fetch(`/api/kv/${encodeURIComponent(key)}`);
+    if(!res.ok) throw new Error('storage get failed');
+    const data = await res.json();
+    if(data.value === null || data.value === undefined) return null;
+    return { key, value: data.value };
+  },
+  async set(key, value){
+    const res = await fetch(`/api/kv/${encodeURIComponent(key)}`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ value })
+    });
+    if(!res.ok) throw new Error('storage set failed');
+    return { key, value };
+  }
+};
+
+let state = { records: [], events: [] };
+let filtered = [];
+let activeStatus = 'All';
+let activeSpecialty = 'All';
+let searchTerm = '';
+let sortBy = 'specialty';
+let calYear = 2026, calMonth = 0; // Jan 2026
+let activeView = 'tracker';
+
+const STATUS_ORDER = ['Follow Up','Developing','DNC','Established','Failed Attempt'];
+const STATUS_META = {
+  'Follow Up': {cls:'followup'},
+  'Developing': {cls:'developing'},
+  'DNC': {cls:'dnc'},
+  'Established': {cls:'established'},
+  'Failed Attempt': {cls:'failed'},
+  '': {cls:'followup'}
+};
+
+function escapeHtml(s){
+  if(s===undefined || s===null) return '';
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function pillHtml(status){
+  const meta = STATUS_META[status] || STATUS_META[''];
+  return `<span class="pill ${meta.cls}">${escapeHtml(status||'Follow Up')}</span>`;
+}
+function lastHistory(r){
+  if(!r.History || r.History.length===0) return null;
+  return [...r.History].sort((a,b)=> (b.date||'').localeCompare(a.date||''))[0];
+}
+function practiceLine(r){
+  return r['Practice Name'] || r['Doctor Name'] || 'Unnamed';
+}
+function doctorSub(r){
+  return r['Doctor Name'] && r['Practice Name'] ? r['Doctor Name'] : '';
+}
+
+async function loadData(){
+  try{
+    const res = await storage.get(STORAGE_KEY);
+    if(res && res.value){
+      state = JSON.parse(res.value);
+      if(!state.events) state.events = [];
+      migrateLegacyFields();
+      return;
+    }
+  }catch(e){}
+  state = { records: DEFAULT_RECORDS, events: [] };
+  migrateLegacyFields();
+  await saveData(false);
+}
+function migrateLegacyFields(){
+  state.records.forEach(r=>{
+    if(r['Next Follow-Up'] !== undefined){
+      if(r['Next Follow-Up'] && !r.ScheduledVisit){
+        r.ScheduledVisit = { date: r['Next Follow-Up'], notes: r['Next Follow-Up Notes']||'' };
+      }
+      delete r['Next Follow-Up'];
+      delete r['Next Follow-Up Notes'];
+    }
+    if(r.Address !== undefined){
+      if(!r.Addresses) r.Addresses = r.Address ? [r.Address] : [];
+      delete r.Address;
+    }
+    if(r.Contact !== undefined){
+      if(!r.Contacts) r.Contacts = r.Contact ? [r.Contact] : [];
+      delete r.Contact;
+    }
+    if(!r.Addresses) r.Addresses = [];
+    if(!r.Contacts) r.Contacts = [];
+  });
+}
+function convertDueVisits(){
+  const today = new Date().toISOString().slice(0,10);
+  let changed = false;
+  state.records.forEach(r=>{
+    if(r.ScheduledVisit && r.ScheduledVisit.date && r.ScheduledVisit.date <= today){
+      if(!r.History) r.History = [];
+      r.History.push({
+        hid: Date.now() + Math.floor(Math.random()*1000),
+        date: r.ScheduledVisit.date,
+        type: '',
+        notes: r.ScheduledVisit.notes || ''
+      });
+      r.ScheduledVisit = null;
+      changed = true;
+    }
+  });
+  if(changed) saveData(false);
+  return changed;
+}
+async function saveData(flash=true){
+  try{
+    await storage.set(STORAGE_KEY, JSON.stringify(state));
+    if(flash) flashSaved();
+  }catch(e){ console.error('Storage error', e); }
+}
+function flashSaved(){
+  const el = document.getElementById('savedFlash');
+  el.classList.add('show');
+  setTimeout(()=> el.classList.remove('show'), 1400);
+}
+let warnTimer = null;
+function showAlert(msg, duration, tone){
+  const el = document.getElementById('warnFlash');
+  el.textContent = msg;
+  el.style.background = tone==='info' ? 'var(--ink)' : 'var(--rust)';
+  el.classList.add('show');
+  clearTimeout(warnTimer);
+  warnTimer = setTimeout(()=> el.classList.remove('show'), duration || 3400);
+}
+function showConfirm(message, confirmLabel){
+  return new Promise(resolve=>{
+    const modal = document.getElementById('confirmModal');
+    modal.innerHTML = `
+      <div class="modal-head"><h2>Are you sure?</h2></div>
+      <div class="modal-body"><p style="margin:0;font-size:13.5px;color:var(--ink);">${escapeHtml(message)}</p></div>
+      <div class="modal-footer">
+        <button class="btn ghost" id="confirmNo">Go back</button>
+        <button class="btn danger" id="confirmYes">${escapeHtml(confirmLabel||'Yes, continue')}</button>
+      </div>`;
+    document.getElementById('confirmOverlay').classList.add('open');
+    const cleanup = (val)=>{
+      document.getElementById('confirmOverlay').classList.remove('open');
+      resolve(val);
+    };
+    document.getElementById('confirmNo').onclick = ()=> cleanup(false);
+    document.getElementById('confirmYes').onclick = ()=> cleanup(true);
+  });
+}
+
+/* ---------------- Tabs ---------------- */
+document.getElementById('tabTracker').addEventListener('click', ()=> switchView('tracker'));
+document.getElementById('tabCalendar').addEventListener('click', ()=> switchView('calendar'));
+function switchView(v){
+  activeView = v;
+  document.getElementById('tabTracker').classList.toggle('active', v==='tracker');
+  document.getElementById('tabCalendar').classList.toggle('active', v==='calendar');
+  document.getElementById('trackerView').classList.toggle('show', v==='tracker');
+  document.getElementById('calendarView').classList.toggle('show', v==='calendar');
+  if(v==='calendar') renderCalendar();
+}
+
+/* ---------------- Stats ---------------- */
+function renderStages(){
+  const recs = state.records;
+  const total = recs.length;
+  const counts = {};
+  STATUS_ORDER.forEach(s=>counts[s]=0);
+  recs.forEach(r=>{ if(counts[r.Status]!==undefined) counts[r.Status]++; });
+  const stages = [
+    {k:'total', label:'Total # Contacts', num:total, color:'var(--ink)', map:'All'},
+    {k:'failed', label:'Failed Attempt', num:counts['Failed Attempt'], color:'var(--rust)', map:'Failed Attempt'},
+    {k:'followup', label:'Follow Up', num:counts['Follow Up'], color:'var(--ochre)', map:'Follow Up'},
+    {k:'developing', label:'Developing', num:counts['Developing'], color:'var(--blue)', map:'Developing'},
+    {k:'dnc', label:'DNC', num:counts['DNC'], color:'var(--slate)', map:'DNC'},
+    {k:'established', label:'Established', num:counts['Established'], color:'var(--sage)', map:'Established'},
+  ];
+  document.getElementById('stageRow').innerHTML = stages.map(s=>`
+    <div class="stage ${activeStatus===s.map?'active':''}" data-map="${s.map}">
+      <div class="stage-label">${s.label}</div>
+      <div class="stage-num" style="color:${s.color}">${s.num}</div>
+      <div class="stage-bar"><div class="stage-bar-fill" style="width:${total?s.num/total*100:0}%;background:${s.color}"></div></div>
+    </div>
+  `).join('');
+  document.querySelectorAll('.stage').forEach(el=>{
+    el.addEventListener('click', ()=>{ activeStatus = el.dataset.map; renderAll(); });
+  });
+}
+
+/* ---------------- Tracker filters/table ---------------- */
+function populateSpecialtyFilter(){
+  const sel = document.getElementById('specialtyFilter');
+  const specialties = Array.from(new Set(state.records.map(r=>r.Specialty).filter(Boolean))).sort();
+  sel.innerHTML = '<option value="All">All specialties</option>' + specialties.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+  sel.value = activeSpecialty;
+}
+function renderChips(){
+  const wrap = document.getElementById('statusChips');
+  const counts = {}; STATUS_ORDER.forEach(s=>counts[s]=0);
+  state.records.forEach(r=>{ if(counts[r.Status]!==undefined) counts[r.Status]++; });
+  const chips = ['All', ...STATUS_ORDER];
+  wrap.innerHTML = chips.map(s=>{
+    const label = s==='All' ? `All (${state.records.length})` : `${s} (${counts[s]||0})`;
+    return `<div class="chip ${activeStatus===s?'active':''}" data-status="${escapeHtml(s)}" style="padding:6px 13px;border-radius:20px;border:1px solid var(--line);background:#fff;font-size:12.5px;cursor:pointer;color:var(--muted);${activeStatus===s?'background:var(--ink);color:#fff;border-color:var(--ink);':''}">${escapeHtml(label)}</div>`;
+  }).join('');
+  wrap.querySelectorAll('.chip').forEach(c=>{
+    c.addEventListener('click', ()=>{ activeStatus = c.dataset.status; renderAll(); });
+  });
+}
+function applyFilters(){
+  filtered = state.records.filter(r=>{
+    if(activeStatus!=='All' && r.Status!==activeStatus) return false;
+    if(activeSpecialty!=='All' && r.Specialty!==activeSpecialty) return false;
+    if(searchTerm){
+      const histText = (r.History||[]).map(h=>h.notes).join(' ');
+      const hay = [r['Doctor Name'], r['Practice Name'], (r.Addresses||[]).join(' '), (r.Contacts||[]).join(' '), r.Notes, histText].join(' ').toLowerCase();
+      if(!hay.includes(searchTerm.toLowerCase())) return false;
+    }
+    return true;
+  });
+  filtered.sort((a,b)=>{
+    if(sortBy==='specialty') return (a.Specialty||'').localeCompare(b.Specialty||'') || practiceLine(a).localeCompare(practiceLine(b));
+    if(sortBy==='status') return STATUS_ORDER.indexOf(a.Status) - STATUS_ORDER.indexOf(b.Status);
+    if(sortBy==='practice') return practiceLine(a).localeCompare(practiceLine(b));
+    return 0;
+  });
+}
+function renderTable(){
+  const body = document.getElementById('tableBody');
+  const empty = document.getElementById('emptyState');
+  document.getElementById('countLine').textContent = `Showing ${filtered.length} of ${state.records.length} contacts`;
+  if(filtered.length===0){ body.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  body.innerHTML = filtered.map(r=>{
+    const lh = lastHistory(r);
+    const attempts = (r.History||[]).length;
+    return `
+    <tr data-id="${r.id}">
+      <td>
+        <div class="doc-name">${escapeHtml(practiceLine(r))}</div>
+        ${doctorSub(r) ? `<div class="practice-sub">${escapeHtml(doctorSub(r))}</div>` : ''}
+      </td>
+      <td>${escapeHtml(r.Specialty||'')}</td>
+      <td>${pillHtml(r.Status)}</td>
+      <td>${lh && lh.date ? escapeHtml(lh.date) + (lh.type?` <span style="color:var(--muted);font-size:11.5px;">(${escapeHtml(lh.type)})</span>`:'') : '<span style="color:var(--muted);">—</span>'}</td>
+      <td>
+        <div>${attempts} attempt${attempts===1?'':'s'}</div>
+        ${lh && lh.notes ? `<div class="notes-preview">${escapeHtml(lh.notes)}</div>` : ''}
+      </td>
+      <td><div class="notes-preview">${escapeHtml(r.Notes||'')}</div></td>
+    </tr>`;
+  }).join('');
+  body.querySelectorAll('tr').forEach(tr=>{
+    tr.addEventListener('click', ()=> openDrawer(parseInt(tr.dataset.id)));
+  });
+}
+function renderAll(){
+  applyFilters();
+  renderChips();
+  renderStages();
+  renderTable();
+}
+
+/* ---------------- Drawer (contact detail) ---------------- */
+function openDrawer(id){
+  const r = state.records.find(x=>x.id===id);
+  if(!r) return;
+  const attempts = (r.History||[]).length;
+  const drawer = document.getElementById('drawer');
+  const sortedHist = [...(r.History||[])].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+
+  drawer.innerHTML = `
+    <div class="drawer-head">
+      <button class="drawer-close" id="closeDrawer">&times;</button>
+      <h2>${escapeHtml(practiceLine(r))}</h2>
+      <div class="sub">${escapeHtml(doctorSub(r) || r.Specialty || '')}</div>
+    </div>
+    <div class="drawer-body">
+      <div class="field-row">
+        <div class="field"><label>Practice name</label><input type="text" id="editPractice" value="${escapeHtml(r['Practice Name']||'')}"></div>
+        <div class="field"><label>Doctor name(s)</label><input type="text" id="editDoctor" value="${escapeHtml(r['Doctor Name']||'')}"></div>
+      </div>
+      <div class="field"><label>Specialty</label><input type="text" id="editSpecialty" value="${escapeHtml(r.Specialty||'')}"></div>
+
+      <div class="field">
+        <label>Addresses</label>
+        <div id="addressList">
+          ${(r.Addresses&&r.Addresses.length ? r.Addresses : ['']).map(a=>`
+            <div class="list-row">
+              <input type="text" class="addr-input" value="${escapeHtml(a)}" placeholder="Street, city, state, zip">
+              <button type="button" class="list-del addr-del">&times;</button>
+            </div>`).join('')}
+        </div>
+        <button class="btn ghost small" type="button" id="addAddressBtn">+ Add another address</button>
+      </div>
+
+      <div class="field">
+        <label>Phone / email</label>
+        <div id="contactList">
+          ${(r.Contacts&&r.Contacts.length ? r.Contacts : ['']).map(c=>`
+            <div class="list-row">
+              <input type="text" class="contact-input" value="${escapeHtml(c)}" placeholder="Phone or email">
+              <button type="button" class="list-del contact-del">&times;</button>
+            </div>`).join('')}
+        </div>
+        <button class="btn ghost small" type="button" id="addContactBtn">+ Add another phone/email</button>
+      </div>
+
+      <div class="field">
+        <label>Notes</label>
+        <textarea id="editGeneralNotes" placeholder="General notes about this contact...">${escapeHtml(r.Notes||'')}</textarea>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Status</label>
+          <select id="editStatus">
+            ${STATUS_ORDER.map(s=>`<option value="${s}" ${r.Status===s?'selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+
+      <div class="attempt-meter">
+        <div class="dots">${Array.from({length:MAX_ATTEMPTS}).map((_,i)=>`<div class="dot ${i<attempts?'filled':''}"></div>`).join('')}</div>
+        <div style="font-size:12.5px;color:var(--muted);">${attempts} of ${MAX_ATTEMPTS} outreach attempts logged</div>
+      </div>
+      ${attempts>=MAX_ATTEMPTS && r.Status==='Follow Up' ? `<div class="attempt-warning">This contact has reached ${MAX_ATTEMPTS} attempts. If there's still been no response, consider updating status to <strong>Failed Attempt</strong>.</div>` : ''}
+      ${r.ScheduledVisit && r.ScheduledVisit.date ? `<div class="field"><label>Next scheduled visit</label><div class="static">${escapeHtml(r.ScheduledVisit.date)}${r.ScheduledVisit.notes ? ' — '+escapeHtml(r.ScheduledVisit.notes) : ''}<br><span style="font-size:11px;color:var(--muted);">Manage or reschedule this from the Team Visit Calendar tab. Once the date arrives, it'll move into the outreach history below.</span></div></div>` : ''}
+
+      <div class="section-title">Outreach history</div>
+      <div id="historyList">
+        ${sortedHist.length===0 ? '<div class="history-empty">No outreach attempts logged yet.</div>' : sortedHist.map(h=>`
+          <div class="history-item" data-hid="${h.hid}">
+            <button class="h-del" data-hid="${h.hid}">&times;</button>
+            <span class="h-date">${escapeHtml(h.date||'No date')}</span>${h.type?`<span class="h-type">${escapeHtml(h.type)}</span>`:''}
+            ${h.notes ? `<div class="h-notes">${escapeHtml(h.notes)}</div>` : ''}
+          </div>
+        `).join('')}
+      </div>
+      <button class="btn ghost small" id="showAddAttempt" ${attempts>=MAX_ATTEMPTS?'':''}>+ Log an outreach attempt</button>
+      <div class="add-attempt-form" id="addAttemptForm" style="display:none;">
+        <div class="field-row">
+          <div class="field"><label>Date</label><input type="date" id="newAttemptDate"></div>
+          <div class="field">
+            <label>Type</label>
+            <select id="newAttemptType">
+              <option value="">— none —</option>
+              <option>Site Visit</option><option>Call</option><option>Email</option>
+              <option>WhatsApp Message</option><option>Letter/Fax</option>
+            </select>
+          </div>
+        </div>
+        <div class="field"><label>Notes</label><textarea id="newAttemptNotes" placeholder="What happened on this attempt?"></textarea></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <button class="btn ghost small" id="cancelAttempt">Cancel</button>
+          <button class="btn small" id="confirmAttempt">Add attempt</button>
+        </div>
+      </div>
+    </div>
+    <div class="drawer-footer">
+      <button class="btn danger" id="deleteContact" style="margin-right:auto;">Delete contact</button>
+      <button class="btn ghost" id="cancelEdit">Close</button>
+      <button class="btn" id="saveEdit">Save changes</button>
+    </div>
+  `;
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.getElementById('closeDrawer').onclick = closeDrawer;
+  document.getElementById('cancelEdit').onclick = closeDrawer;
+
+  function syncFieldsFromDom(){
+    r['Practice Name'] = document.getElementById('editPractice').value.trim();
+    r['Doctor Name'] = document.getElementById('editDoctor').value.trim();
+    r.Specialty = document.getElementById('editSpecialty').value.trim();
+    r.Addresses = Array.from(document.querySelectorAll('.addr-input')).map(i=>i.value.trim()).filter(v=>v);
+    r.Contacts = Array.from(document.querySelectorAll('.contact-input')).map(i=>i.value.trim()).filter(v=>v);
+    r.Status = document.getElementById('editStatus').value;
+    r.Notes = document.getElementById('editGeneralNotes').value.trim();
+  }
+
+  document.getElementById('addAddressBtn').onclick = ()=>{
+    document.getElementById('addressList').insertAdjacentHTML('beforeend',
+      `<div class="list-row"><input type="text" class="addr-input" placeholder="Street, city, state, zip"><button type="button" class="list-del addr-del">&times;</button></div>`);
+  };
+  document.getElementById('addContactBtn').onclick = ()=>{
+    document.getElementById('contactList').insertAdjacentHTML('beforeend',
+      `<div class="list-row"><input type="text" class="contact-input" placeholder="Phone or email"><button type="button" class="list-del contact-del">&times;</button></div>`);
+  };
+  drawer.onclick = (e)=>{
+    if(e.target.classList.contains('addr-del') || e.target.classList.contains('contact-del')){
+      e.target.closest('.list-row').remove();
+    }
+  };
+
+  document.getElementById('showAddAttempt').onclick = ()=>{
+    document.getElementById('addAttemptForm').style.display='block';
+    document.getElementById('newAttemptDate').value = new Date().toISOString().slice(0,10);
+  };
+  document.getElementById('cancelAttempt').onclick = ()=>{
+    document.getElementById('addAttemptForm').style.display='none';
+  };
+  document.getElementById('confirmAttempt').onclick = ()=>{
+    const date = document.getElementById('newAttemptDate').value;
+    const type = document.getElementById('newAttemptType').value;
+    const notes = document.getElementById('newAttemptNotes').value.trim();
+    if(!date && !notes){ showAlert('Add at least a date or a note for this attempt.'); return; }
+    const today = new Date().toISOString().slice(0,10);
+    if(date && date > today){
+      showAlert("Outreach attempts can't be in the future — for upcoming visits, use the Team Visit Calendar tab.");
+      return;
+    }
+    if(!r.History) r.History = [];
+    r.History.push({hid: Date.now(), date, type, notes});
+    syncFieldsFromDom();
+    openDrawer(id); // re-render drawer with new attempt (not yet saved to storage)
+  };
+  drawer.querySelectorAll('.h-del').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const hid = parseInt(btn.dataset.hid);
+      r.History = (r.History||[]).filter(h=>h.hid!==hid);
+      syncFieldsFromDom();
+      openDrawer(id);
+    });
+  });
+
+  document.getElementById('deleteContact').onclick = async ()=>{
+    if(!(await showConfirm(`Delete ${practiceLine(r)} from the tracker? This permanently removes the contact, its outreach history, and any scheduled visit. This can't be undone.`, 'Yes, delete contact'))) return;
+    state.records = state.records.filter(x=>x.id!==id);
+    await saveData();
+    closeDrawer();
+    populateSpecialtyFilter();
+    renderAll();
+    if(activeView==='calendar') renderCalendar();
+  };
+
+  document.getElementById('saveEdit').onclick = async ()=>{
+    syncFieldsFromDom();
+    await saveData();
+    closeDrawer();
+    populateSpecialtyFilter();
+    renderAll();
+    if(activeView==='calendar') renderCalendar();
+  };
+}
+function closeDrawer(){ document.getElementById('drawerOverlay').classList.remove('open'); }
+
+/* ---------------- Add contact modal ---------------- */
+function openAddModal(){
+  const modal = document.getElementById('addModal');
+  const specialties = Array.from(new Set(state.records.map(r=>r.Specialty).filter(Boolean))).sort();
+  modal.innerHTML = `
+    <div class="modal-head"><h2>Add a new contact</h2></div>
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field"><label>Practice name</label><input id="newPractice"></div>
+        <div class="field"><label>Doctor name(s)</label><input id="newDoctor" placeholder="Dr. Jane Smith, or 'Multiple'"></div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Specialty</label>
+          <select id="newSpecialtySelect">
+            <option value="">— Select a specialty —</option>
+            ${specialties.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('')}
+            <option value="__new__">+ Add a new specialty…</option>
+          </select>
+          <input type="text" id="newSpecialtyCustom" placeholder="Enter new specialty" style="display:none;margin-top:8px;">
+        </div>
+        <div class="field">
+          <label>Status</label>
+          <select id="newStatus">${STATUS_ORDER.map(s=>`<option value="${s}">${s}</option>`).join('')}</select>
+        </div>
+      </div>
+      <div class="field"><label>Address</label><input id="newAddress"></div>
+      <div class="field"><label>Contact</label><input id="newContact" placeholder="Phone or email"></div>
+      <div class="field"><label>Initial notes (optional first attempt)</label><textarea id="newNotes"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn ghost" id="cancelAdd">Cancel</button>
+      <button class="btn" id="confirmAdd">Add contact</button>
+    </div>
+  `;
+  document.getElementById('addOverlay').classList.add('open');
+  document.getElementById('newSpecialtySelect').onchange = (e)=>{
+    const customInput = document.getElementById('newSpecialtyCustom');
+    if(e.target.value === '__new__'){
+      customInput.style.display = 'block';
+      customInput.focus();
+    }else{
+      customInput.style.display = 'none';
+    }
+  };
+  document.getElementById('cancelAdd').onclick = ()=> document.getElementById('addOverlay').classList.remove('open');
+  document.getElementById('confirmAdd').onclick = async ()=>{
+    const practice = document.getElementById('newPractice').value.trim();
+    const doctor = document.getElementById('newDoctor').value.trim();
+    if(!practice && !doctor){ showAlert('Enter at least a practice name or doctor name.'); return; }
+    const maxId = state.records.reduce((m,r)=>Math.max(m,r.id||0),0);
+    const notes = document.getElementById('newNotes').value.trim();
+    const history = notes ? [{hid: Date.now(), date: new Date().toISOString().slice(0,10), type:'', notes}] : [];
+    const specSelect = document.getElementById('newSpecialtySelect').value;
+    if(specSelect === '__new__' && !document.getElementById('newSpecialtyCustom').value.trim()){
+      showAlert('Enter a name for the new specialty, or pick one from the list.');
+      return;
+    }
+    const specialty = specSelect === '__new__' ? document.getElementById('newSpecialtyCustom').value.trim() : specSelect;
+    state.records.push({
+      id: maxId+1,
+      'Doctor Name': doctor,
+      'Specialty': specialty,
+      'Practice Name': practice,
+      'Addresses': document.getElementById('newAddress').value.trim() ? [document.getElementById('newAddress').value.trim()] : [],
+      'Contacts': document.getElementById('newContact').value.trim() ? [document.getElementById('newContact').value.trim()] : [],
+      'Status': document.getElementById('newStatus').value,
+      'History': history,
+      'ScheduledVisit': null
+    });
+    await saveData();
+    populateSpecialtyFilter();
+    document.getElementById('addOverlay').classList.remove('open');
+    renderAll();
+  };
+}
+
+/* ---------------- Calendar ---------------- */
+function allCalendarEvents(){
+  const evts = [];
+  state.records.forEach(r=>{
+    if(r.ScheduledVisit && r.ScheduledVisit.date){
+      evts.push({
+        date: r.ScheduledVisit.date,
+        title: practiceLine(r),
+        sub: [r.Specialty, doctorSub(r)].filter(Boolean).join(' · '),
+        address: (r.Addresses||[]).join('; '),
+        notes: r.ScheduledVisit.notes||'',
+        type: r.Status==='Developing' ? 'developing' : 'followup',
+        recordId: r.id
+      });
+    }
+    (r.History||[]).forEach(h=>{
+      if(h.date){
+        evts.push({
+          date: h.date,
+          title: practiceLine(r),
+          sub: [r.Specialty, doctorSub(r), h.type].filter(Boolean).join(' · '),
+          address: (r.Addresses||[]).join('; '),
+          notes: h.notes,
+          type: 'attempt',
+          recordId: r.id
+        });
+      }
+    });
+  });
+  state.events.forEach(e=>{
+    evts.push({date:e.date, title:e.title, sub:[e.specialty,e.doctor].filter(Boolean).join(' · '), address:e.address, type:'extra', eventId:e.id, notes:e.notes});
+  });
+  return evts;
+}
+function renderCalendar(){
+  const title = new Date(calYear, calMonth, 1).toLocaleString('en-US',{month:'long', year:'numeric'});
+  document.getElementById('calMonthTitle').textContent = title;
+  const yearSel = document.getElementById('calYearJump');
+  if(yearSel.options.length===0){
+    [2026,2027].forEach(y=>{ const o=document.createElement('option'); o.value=y; o.textContent=y; yearSel.appendChild(o); });
+  }
+  yearSel.value = calYear;
+
+  const firstDay = new Date(calYear, calMonth, 1);
+  const startWeekday = firstDay.getDay();
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  const daysInPrevMonth = new Date(calYear, calMonth, 0).getDate();
+  const events = allCalendarEvents();
+  const todayStr = new Date().toISOString().slice(0,10);
+
+  const cells = [];
+  for(let i=startWeekday-1;i>=0;i--) cells.push({day: daysInPrevMonth-i, other:true});
+  for(let d=1; d<=daysInMonth; d++) cells.push({day:d, other:false});
+  while(cells.length % 7 !== 0) cells.push({day: cells.length - (startWeekday+daysInMonth) + 1, other:true});
+
+  const grid = document.getElementById('calGrid');
+  const dow = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  const dayCells = cells.map(c=>{
+    const dateStr = !c.other ? `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(c.day).padStart(2,'0')}` : null;
+    const dayEvents = dateStr ? events.filter(e=>e.date===dateStr) : [];
+    const isToday = dateStr === todayStr;
+    const shown = dayEvents.slice(0,2);
+    const more = dayEvents.length - shown.length;
+    return `<div class="cal-day ${c.other?'other-month':''} ${isToday?'today':''}" data-date="${dateStr||''}">
+      <div class="cal-daynum">${c.day}</div>
+      ${shown.map(e=>`<div class="cal-event type-${e.type}">${escapeHtml(e.title)}</div>`).join('')}
+      ${more>0?`<div class="cal-more">+${more} more</div>`:''}
+    </div>`;
+  }).join('');
+  grid.innerHTML = dow + dayCells;
+  grid.querySelectorAll('.cal-day[data-date]').forEach(el=>{
+    if(!el.dataset.date) return;
+    el.addEventListener('click', ()=> openDayModal(el.dataset.date));
+  });
+
+  // Agenda: upcoming events in this month, sorted
+  const monthEvents = events.filter(e=> e.date && e.date.startsWith(`${calYear}-${String(calMonth+1).padStart(2,'0')}`)).sort((a,b)=>a.date.localeCompare(b.date));
+  const agenda = document.getElementById('agendaList');
+  if(monthEvents.length===0){
+    agenda.innerHTML = `<div class="empty-state">No visits scheduled this month yet.</div>`;
+  }else{
+    agenda.innerHTML = `<div class="section-title" style="border-top:none;padding-top:0;">This month's schedule</div>` + monthEvents.map(e=>`
+      <div class="agenda-item" data-date="${e.date}">
+        <div class="agenda-date">${e.date}</div>
+        <div class="agenda-main">
+          <div class="a-title">${escapeHtml(e.title)}</div>
+          <div class="a-sub">${escapeHtml(e.sub||'')}${e.address?' — '+escapeHtml(e.address):''}</div>
+        </div>
+      </div>
+    `).join('');
+    agenda.querySelectorAll('.agenda-item').forEach(el=> el.addEventListener('click', ()=> openDayModal(el.dataset.date)));
+  }
+}
+document.getElementById('prevMonth').addEventListener('click', ()=>{
+  calMonth--; if(calMonth<0){calMonth=11; calYear--;} renderCalendar();
+});
+document.getElementById('nextMonth').addEventListener('click', ()=>{
+  calMonth++; if(calMonth>11){calMonth=0; calYear++;} renderCalendar();
+});
+document.getElementById('calYearJump').addEventListener('change', e=>{ calYear=parseInt(e.target.value); renderCalendar(); });
+document.getElementById('jumpTodayBtn').addEventListener('click', ()=>{
+  const now = new Date(); calYear = now.getFullYear(); calMonth = now.getMonth(); renderCalendar();
+});
+
+function openDayModal(dateStr){
+  const events = allCalendarEvents().filter(e=>e.date===dateStr);
+  const modal = document.getElementById('dayModal');
+
+  const blocks = events.map((e, idx)=>{
+    if(e.type==='attempt'){
+      return `
+        <div class="history-item">
+          <div class="h-date">${escapeHtml(e.title)}</div>
+          <div class="h-notes">${escapeHtml(e.sub||'')}${e.notes?'<br>'+escapeHtml(e.notes):''}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px;">Logged attempt — edit from the Tracker.</div>
+        </div>`;
+    }
+    if(e.type==='extra'){
+      return `
+        <div class="history-item" data-kind="extra" data-eid="${e.eventId}">
+          <div class="h-date">${escapeHtml(e.title)}</div>
+          <div class="field-row" style="margin-top:10px;">
+            <div class="field"><label>Date</label><input type="date" class="ev-date" value="${escapeHtml(e.date)}"></div>
+            <div class="field"><label>Title</label><input type="text" class="ev-title" value="${escapeHtml(e.title)}"></div>
+          </div>
+          <div class="field"><label>Address</label><input type="text" class="ev-address" value="${escapeHtml(e.address||'')}"></div>
+          <div class="field"><label>Notes</label><textarea class="ev-notes">${escapeHtml(e.notes||'')}</textarea></div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;">
+            <button class="btn danger small ev-cancel">Cancel visit</button>
+            <button class="btn small ev-save">Save changes</button>
+          </div>
+        </div>`;
+    }
+    // followup / developing — tied to a tracker contact
+    return `
+      <div class="history-item" data-kind="record" data-rid="${e.recordId}">
+        <div class="h-date">${escapeHtml(e.title)}</div>
+        <div class="h-notes">${escapeHtml(e.sub||'')}${e.address?'<br>'+escapeHtml(e.address):''}</div>
+        <div class="field-row" style="margin-top:10px;">
+          <div class="field"><label>Visit date</label><input type="date" class="ev-date" value="${escapeHtml(e.date)}"></div>
+        </div>
+        <div class="field"><label>Visit notes</label><textarea class="ev-notes" placeholder="What's the plan for this visit?">${escapeHtml(e.notes||'')}</textarea></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <button class="btn danger small ev-cancel">Cancel visit</button>
+          <button class="btn small ev-save">Save changes</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  modal.innerHTML = `
+    <div class="modal-head"><h2>${escapeHtml(dateStr)}</h2></div>
+    <div class="modal-body">
+      ${events.length===0 ? '<div class="history-empty">Nothing scheduled for this day yet.</div>' : blocks}
+      <button class="btn small" id="scheduleHereBtn" style="margin-top:14px;">+ Schedule a visit on this day</button>
+    </div>
+    <div class="modal-footer"><button class="btn ghost" id="closeDayModal">Close</button></div>
+  `;
+  document.getElementById('dayOverlay').classList.add('open');
+  document.getElementById('closeDayModal').onclick = ()=> document.getElementById('dayOverlay').classList.remove('open');
+  document.getElementById('scheduleHereBtn').onclick = ()=>{
+    document.getElementById('dayOverlay').classList.remove('open');
+    openScheduleModal(dateStr);
+  };
+
+  modal.querySelectorAll('.history-item[data-kind="record"]').forEach(block=>{
+    const rid = parseInt(block.dataset.rid);
+    block.querySelector('.ev-save').onclick = async ()=>{
+      const r = state.records.find(x=>x.id===rid);
+      if(!r) return;
+      r.ScheduledVisit = {
+        date: block.querySelector('.ev-date').value,
+        notes: block.querySelector('.ev-notes').value.trim()
+      };
+      await saveData();
+      convertDueVisits();
+      renderCalendar(); renderAll();
+      openDayModal(block.querySelector('.ev-date').value || dateStr);
+    };
+    block.querySelector('.ev-cancel').onclick = async ()=>{
+      if(!(await showConfirm('Cancel this scheduled visit? This removes the upcoming visit for this contact — it will not be added to their outreach history.', 'Yes, cancel visit'))) return;
+      const r = state.records.find(x=>x.id===rid);
+      if(!r) return;
+      r.ScheduledVisit = null;
+      await saveData();
+      renderCalendar(); renderAll();
+      openDayModal(dateStr);
+    };
+  });
+
+  modal.querySelectorAll('.history-item[data-kind="extra"]').forEach(block=>{
+    const eid = parseInt(block.dataset.eid);
+    block.querySelector('.ev-save').onclick = async ()=>{
+      const ev = state.events.find(x=>x.id===eid);
+      if(!ev) return;
+      ev.date = block.querySelector('.ev-date').value;
+      ev.title = block.querySelector('.ev-title').value.trim() || ev.title;
+      ev.address = block.querySelector('.ev-address').value.trim();
+      ev.notes = block.querySelector('.ev-notes').value.trim();
+      await saveData();
+      renderCalendar();
+      openDayModal(ev.date || dateStr);
+    };
+    block.querySelector('.ev-cancel').onclick = async ()=>{
+      if(!(await showConfirm('Cancel this scheduled visit? This removes it from the calendar.', 'Yes, cancel visit'))) return;
+      state.events = state.events.filter(x=>x.id!==eid);
+      await saveData();
+      renderCalendar();
+      openDayModal(dateStr);
+    };
+  });
+}
+
+document.getElementById('scheduleBtn').addEventListener('click', ()=> openScheduleModal(''));
+function openScheduleModal(prefillDate){
+  const modal = document.getElementById('scheduleModal');
+  const contactOptions = state.records
+    .slice()
+    .sort((a,b)=>practiceLine(a).localeCompare(practiceLine(b)))
+    .map(r=>`<option value="${r.id}">${escapeHtml(practiceLine(r))}${doctorSub(r)?' — '+escapeHtml(doctorSub(r)):''}</option>`).join('');
+  modal.innerHTML = `
+    <div class="modal-head"><h2>Schedule a visit</h2></div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Link to an existing contact (optional)</label>
+        <select id="schedContact"><option value="">— Ad-hoc / not in tracker —</option>${contactOptions}</select>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Date</label><input type="date" id="schedDate" value="${prefillDate}"></div>
+        <div class="field"><label>Visit title / practice</label><input id="schedTitle" placeholder="Only needed if ad-hoc"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Specialty</label><input id="schedSpecialty"></div>
+        <div class="field"><label>Who (doctor)</label><input id="schedDoctor"></div>
+      </div>
+      <div class="field"><label>Address</label><input id="schedAddress"></div>
+      <div class="field"><label>Notes</label><textarea id="schedNotes"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn ghost" id="cancelSched">Cancel</button>
+      <button class="btn" id="confirmSched">Schedule</button>
+    </div>
+  `;
+  document.getElementById('scheduleOverlay').classList.add('open');
+  document.getElementById('cancelSched').onclick = ()=> document.getElementById('scheduleOverlay').classList.remove('open');
+  document.getElementById('schedContact').onchange = (e)=>{
+    const r = state.records.find(x=>x.id===parseInt(e.target.value));
+    if(r){
+      document.getElementById('schedTitle').value = practiceLine(r);
+      document.getElementById('schedSpecialty').value = r.Specialty||'';
+      document.getElementById('schedDoctor').value = r['Doctor Name']||'';
+      document.getElementById('schedAddress').value = (r.Addresses||[]).join('; ');
+    }
+  };
+  document.getElementById('confirmSched').onclick = async ()=>{
+    const date = document.getElementById('schedDate').value;
+    if(!date){ showAlert('Pick a date.'); return; }
+    const contactId = document.getElementById('schedContact').value;
+    if(contactId){
+      const r = state.records.find(x=>x.id===parseInt(contactId));
+      r.ScheduledVisit = { date, notes: document.getElementById('schedNotes').value.trim() };
+    }else{
+      const title = document.getElementById('schedTitle').value.trim();
+      if(!title){ showAlert('Enter a title for this ad-hoc visit, or link it to an existing contact.'); return; }
+      const maxEid = state.events.reduce((m,e)=>Math.max(m,e.id||0),0);
+      state.events.push({
+        id: maxEid+1, date, title,
+        specialty: document.getElementById('schedSpecialty').value.trim(),
+        doctor: document.getElementById('schedDoctor').value.trim(),
+        address: document.getElementById('schedAddress').value.trim(),
+        notes: document.getElementById('schedNotes').value.trim()
+      });
+    }
+    await saveData();
+    convertDueVisits();
+    document.getElementById('scheduleOverlay').classList.remove('open');
+    renderCalendar();
+    renderAll();
+  };
+}
+
+/* ---------------- Wiring ---------------- */
+document.getElementById('searchInput').addEventListener('input', e=>{ searchTerm = e.target.value; renderAll(); });
+document.getElementById('specialtyFilter').addEventListener('change', e=>{ activeSpecialty = e.target.value; renderAll(); });
+document.getElementById('sortSelect').addEventListener('change', e=>{ sortBy = e.target.value; renderAll(); });
+document.getElementById('addBtn').addEventListener('click', openAddModal);
+document.getElementById('drawerOverlay').addEventListener('click', e=>{ if(e.target.id==='drawerOverlay') closeDrawer(); });
+document.getElementById('addOverlay').addEventListener('click', e=>{ if(e.target.id==='addOverlay') document.getElementById('addOverlay').classList.remove('open'); });
+document.getElementById('dayOverlay').addEventListener('click', e=>{ if(e.target.id==='dayOverlay') document.getElementById('dayOverlay').classList.remove('open'); });
+document.getElementById('scheduleOverlay').addEventListener('click', e=>{ if(e.target.id==='scheduleOverlay') document.getElementById('scheduleOverlay').classList.remove('open'); });
+
+function startApp(){
+  (async function init(){
+    await loadData();
+    // ensure history items have stable hid
+    state.records.forEach(r=>{
+      (r.History||[]).forEach(h=>{ if(!h.hid) h.hid = Math.floor(Math.random()*1e9); });
+    });
+    convertDueVisits();
+    populateSpecialtyFilter();
+    renderAll();
+    const now = new Date();
+    calYear = now.getFullYear() >= 2026 && now.getFullYear() <= 2027 ? now.getFullYear() : 2026;
+    calMonth = calYear === now.getFullYear() ? now.getMonth() : 0;
+  })();
+  startSyncPolling();
+}
+
+function anyOverlayOpen(){
+  return ['drawerOverlay','addOverlay','dayOverlay','scheduleOverlay','confirmOverlay']
+    .some(id => document.getElementById(id) && document.getElementById(id).classList.contains('open'));
+}
+
+let syncPollInterval = null;
+function startSyncPolling(){
+  if(syncPollInterval) return;
+  syncPollInterval = setInterval(async ()=>{
+    if(anyOverlayOpen()) return; // don't pull in changes while someone's mid-edit
+    try{
+      const res = await storage.get(STORAGE_KEY);
+      if(!res || !res.value) return;
+      if(res.value === JSON.stringify(state)) return; // no change
+      state = JSON.parse(res.value);
+      if(!state.events) state.events = [];
+      migrateLegacyFields();
+      convertDueVisits();
+      populateSpecialtyFilter();
+      renderAll();
+      if(activeView==='calendar') renderCalendar();
+    }catch(e){}
+  }, 15000);
+}
+
+/* ---------------- Export to Outlook (.ics) ---------------- */
+function icsEscape(s){
+  return String(s||'').replace(/\\/g,'\\\\').replace(/,/g,'\\,').replace(/;/g,'\\;').replace(/\n/g,'\\n');
+}
+function icsTimestamp(){
+  return new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
+}
+function generateICS(){
+  const events = allCalendarEvents().filter(e=> e.type!=='attempt' && e.date);
+  let lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Prolato//Outreach Pipeline//EN','CALSCALE:GREGORIAN'];
+  events.forEach((e,idx)=>{
+    const dt = e.date.replace(/-/g,'');
+    const uid = `${e.recordId||e.eventId||idx}-${dt}@prolato-outreach-pipeline`;
+    lines.push('BEGIN:VEVENT');
+    lines.push(`UID:${uid}`);
+    lines.push(`DTSTAMP:${icsTimestamp()}`);
+    lines.push(`DTSTART;VALUE=DATE:${dt}`);
+    lines.push(`SUMMARY:${icsEscape(e.title)}`);
+    if(e.address) lines.push(`LOCATION:${icsEscape(e.address)}`);
+    const desc = [e.sub, e.notes].filter(Boolean).join(' — ');
+    if(desc) lines.push(`DESCRIPTION:${icsEscape(desc)}`);
+    lines.push('END:VEVENT');
+  });
+  lines.push('END:VCALENDAR');
+  return lines.join('\r\n');
+}
+document.getElementById('exportIcsBtn').addEventListener('click', ()=>{
+  const events = allCalendarEvents().filter(e=> e.type!=='attempt' && e.date);
+  if(events.length===0){ showAlert('No upcoming visits scheduled yet — nothing to export.'); return; }
+  const ics = generateICS();
+  const blob = new Blob([ics], {type:'text/calendar;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'prolato-outreach-visits.ics';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=> URL.revokeObjectURL(url), 2000);
+  showAlert(`Exported ${events.length} visit${events.length===1?'':'s'} — open the downloaded file, or import it in Outlook (File \u2192 Open & Export \u2192 Import/Export).`, 6000, 'info');
+});
+
+startApp();
+
+</script>
+</body>
+</html>
