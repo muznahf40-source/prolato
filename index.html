@@ -200,10 +200,7 @@ footer{max-width:1360px;margin:0 auto;padding:0 28px 40px;color:var(--muted);fon
       <h1 class="brand-title">Physician Outreach Pipeline</h1>
       <div class="brand-sub">Houston-area referral network — site visits, calls &amp; follow-ups</div>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;">
-      <div class="sync-pill"><span class="sync-dot"></span> Synced for the team</div>
-      <button class="btn ghost" id="lockBtn" style="background:rgba(255,255,255,.08);color:#CFE3DB;border-color:rgba(255,255,255,.25);">🔒 Passcode</button>
-    </div>
+    <div class="sync-pill"><span class="sync-dot"></span> Synced for the team</div>
   </div>
   <div class="tabs-row">
     <div class="tabs">
@@ -287,7 +284,6 @@ footer{max-width:1360px;margin:0 auto;padding:0 28px 40px;color:var(--muted);fon
 <div class="modal-overlay" id="dayOverlay"><div class="modal" id="dayModal"></div></div>
 <div class="modal-overlay" id="scheduleOverlay"><div class="modal" id="scheduleModal"></div></div>
 <div class="modal-overlay" id="confirmOverlay"><div class="modal" id="confirmModal" style="max-width:400px;"></div></div>
-<div class="modal-overlay" id="passOverlay"><div class="modal" id="passModal"></div></div>
 
 <div class="saved-flash" id="savedFlash">Saved</div>
 <div class="saved-flash" id="warnFlash" style="background:var(--rust);"></div>
@@ -1084,12 +1080,42 @@ function startApp(){
     calYear = now.getFullYear() >= 2026 && now.getFullYear() <= 2027 ? now.getFullYear() : 2026;
     calMonth = calYear === now.getFullYear() ? now.getMonth() : 0;
   })();
+  startSyncPolling();
+}
+
+function anyOverlayOpen(){
+  return ['drawerOverlay','addOverlay','dayOverlay','scheduleOverlay','confirmOverlay']
+    .some(id => document.getElementById(id) && document.getElementById(id).classList.contains('open'));
+}
+
+let syncPollInterval = null;
+function startSyncPolling(){
+  if(syncPollInterval) return;
+  syncPollInterval = setInterval(async ()=>{
+    if(anyOverlayOpen()) return; // don't pull in changes while someone's mid-edit
+    try{
+      const res = await window.storage.get(STORAGE_KEY, true);
+      if(!res || !res.value) return;
+      if(res.value === JSON.stringify(state)) return; // no change
+      state = JSON.parse(res.value);
+      if(!state.events) state.events = [];
+      migrateLegacyFields();
+      convertDueVisits();
+      populateSpecialtyFilter();
+      renderAll();
+      if(activeView==='calendar') renderCalendar();
+    }catch(e){}
+  }, 15000);
 }
 
 /* ---------------- Access gate ---------------- */
 const PASSCODE_KEY = 'outreach-team-passcode';
 const ACCESS_KEY = 'outreach-access-granted';
+const LAST_ACTIVITY_KEY = 'outreach-last-activity';
 const DEFAULT_PASSCODE = 'EnlargeTrials2026';
+const INACTIVITY_LIMIT_MS = 10 * 60 * 1000; // 10 minutes
+let inactivityTimer = null;
+let activityWriteThrottle = null;
 
 function eyeIcon(open){
   return open
@@ -1112,6 +1138,41 @@ function showApp(){
   document.getElementById('gateOverlay').classList.add('hidden');
   document.getElementById('appRoot').style.display = 'block';
   startApp();
+  startActivityTracking();
+}
+
+function recordActivity(immediate){
+  const write = async ()=>{
+    try{ await window.storage.set(LAST_ACTIVITY_KEY, String(Date.now()), false); }catch(e){}
+  };
+  if(immediate){ write(); return; }
+  clearTimeout(activityWriteThrottle);
+  activityWriteThrottle = setTimeout(write, 5000);
+}
+
+function resetInactivityTimer(){
+  recordActivity(false);
+  clearTimeout(inactivityTimer);
+  inactivityTimer = setTimeout(lockApp, INACTIVITY_LIMIT_MS);
+}
+
+let activityListenersAttached = false;
+function startActivityTracking(){
+  recordActivity(true);
+  if(!activityListenersAttached){
+    ['mousemove','mousedown','keydown','scroll','touchstart','click'].forEach(evt=>{
+      document.addEventListener(evt, resetInactivityTimer, {passive:true});
+    });
+    activityListenersAttached = true;
+  }
+  resetInactivityTimer();
+}
+
+async function lockApp(){
+  try{ await window.storage.set(ACCESS_KEY, 'false', false); }catch(e){}
+  document.getElementById('appRoot').style.display = 'none';
+  document.getElementById('gateOverlay').classList.remove('hidden');
+  checkGate();
 }
 
 function renderGateLogin(correctPass){
@@ -1145,11 +1206,18 @@ function renderGateLogin(correctPass){
 
 async function checkGate(){
   let accessGranted = false;
+  let lastActivity = 0;
   try{
     const res = await window.storage.get(ACCESS_KEY, false);
     if(res && res.value === 'true') accessGranted = true;
   }catch(e){}
-  if(accessGranted){ showApp(); return; }
+  try{
+    const res2 = await window.storage.get(LAST_ACTIVITY_KEY, false);
+    if(res2 && res2.value) lastActivity = parseInt(res2.value) || 0;
+  }catch(e){}
+
+  const idleTooLong = lastActivity && (Date.now() - lastActivity > INACTIVITY_LIMIT_MS);
+  if(accessGranted && !idleTooLong){ showApp(); return; }
 
   let existingPasscode = null;
   try{
@@ -1163,49 +1231,6 @@ async function checkGate(){
   }
   renderGateLogin(existingPasscode);
 }
-
-async function openPasscodeModal(){
-  let existing = '';
-  try{ const res = await window.storage.get(PASSCODE_KEY, true); if(res&&res.value) existing = res.value; }catch(e){}
-  const modal = document.getElementById('passModal');
-  modal.innerHTML = `
-    <div class="modal-head"><h2>Change team passcode</h2></div>
-    <div class="modal-body">
-      <div class="field"><label>Current passcode</label>
-        <div class="pass-field"><input type="password" id="curPass"><button type="button" class="pass-toggle" id="toggleCur"></button></div>
-      </div>
-      <div class="field"><label>New passcode</label>
-        <div class="pass-field"><input type="password" id="newPass1"><button type="button" class="pass-toggle" id="toggleNew1"></button></div>
-      </div>
-      <div class="field"><label>Confirm new passcode</label>
-        <div class="pass-field"><input type="password" id="newPass2"><button type="button" class="pass-toggle" id="toggleNew2"></button></div>
-      </div>
-      <div style="font-size:11.5px;color:var(--muted);">Changing this will require everyone on the team to re-enter the new passcode the next time they open the link on a device that hasn't unlocked it before.</div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn ghost" id="cancelPass">Cancel</button>
-      <button class="btn" id="savePass">Update passcode</button>
-    </div>
-  `;
-  wirePasswordToggle('curPass','toggleCur');
-  wirePasswordToggle('newPass1','toggleNew1');
-  wirePasswordToggle('newPass2','toggleNew2');
-  document.getElementById('passOverlay').classList.add('open');
-  document.getElementById('cancelPass').onclick = ()=> document.getElementById('passOverlay').classList.remove('open');
-  document.getElementById('savePass').onclick = async ()=>{
-    const cur = document.getElementById('curPass').value;
-    const n1 = document.getElementById('newPass1').value;
-    const n2 = document.getElementById('newPass2').value;
-    if(cur !== existing){ showAlert('Current passcode is incorrect.'); return; }
-    if(!n1 || n1.length<4){ showAlert('Choose a new passcode with at least 4 characters.'); return; }
-    if(n1 !== n2){ showAlert("New passcodes don't match."); return; }
-    try{ await window.storage.set(PASSCODE_KEY, n1, true); }catch(e){}
-    document.getElementById('passOverlay').classList.remove('open');
-    showAlert('Passcode updated.');
-  };
-}
-document.getElementById('lockBtn').addEventListener('click', openPasscodeModal);
-document.getElementById('passOverlay').addEventListener('click', e=>{ if(e.target.id==='passOverlay') document.getElementById('passOverlay').classList.remove('open'); });
 
 /* ---------------- Export to Outlook (.ics) ---------------- */
 function icsEscape(s){
