@@ -43,7 +43,7 @@ h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;margin:0;}
 
 /* stat cards */
 .stage-strip{max-width:1360px;margin:24px auto 0;padding:0 28px;}
-.stage-row{display:grid;grid-template-columns:repeat(5,1fr);background:var(--paper-card);border-radius:var(--radius);box-shadow:0 6px 20px rgba(14,33,29,.10);overflow:hidden;border:1px solid var(--line);}
+.stage-row{display:grid;grid-template-columns:repeat(6,1fr);background:var(--paper-card);border-radius:var(--radius);box-shadow:0 6px 20px rgba(14,33,29,.10);overflow:hidden;border:1px solid var(--line);}
 .stage{padding:14px 16px;border-right:1px solid var(--line);cursor:pointer;transition:background .15s;}
 .stage:last-child{border-right:none;}
 .stage:hover{background:#F8FAF8;}
@@ -366,12 +366,13 @@ let activeView = 'tracker';
 let currentUserEmail = '';
 let editingHistoryId = null;
 
-const STATUS_ORDER = ['Follow Up','Pending Activation','Established','Unresponsive'];
+const STATUS_ORDER = ['Follow Up','Pending Activation','Established','Unresponsive','Not Interested'];
 const STATUS_META = {
   'Follow Up': {cls:'followup'},
   'Pending Activation': {cls:'developing'},
   'Established': {cls:'established'},
   'Unresponsive': {cls:'failed'},
+  'Not Interested': {cls:'dnc'},
   '': {cls:'followup'}
 };
 // Maps every status label used in any earlier version of this tracker to
@@ -540,6 +541,7 @@ function renderStages(){
     {k:'pending', label:'Pending Activation', num:counts['Pending Activation'], color:'var(--blue)', map:'Pending Activation'},
     {k:'established', label:'Established', num:counts['Established'], color:'var(--sage)', map:'Established'},
     {k:'unresponsive', label:'Unresponsive', num:counts['Unresponsive'], color:'var(--rust)', map:'Unresponsive'},
+    {k:'notinterested', label:'Not Interested', num:counts['Not Interested'], color:'var(--slate)', map:'Not Interested'},
   ];
   document.getElementById('stageRow').innerHTML = stages.map(s=>`
     <div class="stage ${activeStatus===s.map?'active':''}" data-map="${s.map}">
