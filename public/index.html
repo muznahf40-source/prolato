@@ -340,21 +340,6 @@ footer{max-width:1360px;margin:0 auto;padding:0 28px 40px;color:var(--muted);fon
       <div class="ct-dash-title">Pipeline stage</div>
       <div class="stage-row" id="ctStageRow" style="display:grid;grid-template-columns:repeat(6,1fr);background:var(--paper-card);border-radius:var(--radius);box-shadow:0 6px 20px rgba(14,33,29,.10);overflow:hidden;border:1px solid var(--line);"></div>
     </div>
-    <div class="ct-dash-section">
-      <div class="ct-dash-title">Study status</div>
-      <div class="stage-row" id="ctStudyStatusRow" style="display:grid;grid-template-columns:repeat(4,1fr);background:var(--paper-card);border-radius:var(--radius);box-shadow:0 6px 20px rgba(14,33,29,.10);overflow:hidden;border:1px solid var(--line);"></div>
-    </div>
-    <div class="ct-dash-section">
-      <div class="ct-dash-title">Outreach breakdown</div>
-      <div class="ct-metric-tables">
-        <div class="ct-metric-table">
-          <table><thead><tr><th>Therapeutic area</th><th>Trials reached out to</th></tr></thead><tbody id="ctAreaMetricBody"></tbody></table>
-        </div>
-        <div class="ct-metric-table">
-          <table><thead><tr><th>Notification source</th><th>Trials</th></tr></thead><tbody id="ctSourceMetricBody"></tbody></table>
-        </div>
-      </div>
-    </div>
 
     <div class="controls">
       <div class="search-wrap">
@@ -1481,6 +1466,7 @@ const CT_STATUS_META = {
 };
 const CT_HISTORY_TYPES = ['Email','Call','Visit'];
 const CT_SOURCES = ['Outreach Effort','Inato','DrugDev','Referred by PI','Other'];
+const CT_STUDY_STATUSES = ['','Recruiting','Not Yet Recruiting','Active, Not Recruiting','Completed','Suspended','Terminated','Unknown status','Pending'];
 
 function ctPillHtml(status){
   const meta = CT_STATUS_META[status] || CT_STATUS_META[''];
@@ -1503,18 +1489,21 @@ async function loadCTData(){
   try{
     const res = await storage.get(CT_STORAGE_KEY);
     if(res && res.value){
-      ctState = JSON.parse(res.value);
-      if(!ctState.records) ctState.records = [];
-      ctState.records.forEach(r=>{
-        if(!r.Contacts) r.Contacts = [];
-        if(!r.History) r.History = [];
-        if(r.StudyStatus===undefined) r.StudyStatus = '';
-        if(r.Source===undefined) r.Source = 'Outreach Effort';
-        if(r.PrimaryFocusArea===undefined) r.PrimaryFocusArea = '';
-        r.Contacts.forEach(c=>{ if(!c.id) c.id = Date.now()+Math.floor(Math.random()*1000); });
-        r.History.forEach(h=>{ if(!h.hid) h.hid = Date.now()+Math.floor(Math.random()*1000); });
-      });
-      return;
+      const parsed = JSON.parse(res.value);
+      if(parsed && Array.isArray(parsed.records) && parsed.records.length > 0){
+        ctState = parsed;
+        ctState.records.forEach(r=>{
+          if(!r.Contacts) r.Contacts = [];
+          if(!r.History) r.History = [];
+          if(r.StudyStatus===undefined) r.StudyStatus = '';
+          if(r.Source===undefined) r.Source = 'Outreach Effort';
+          if(r.PrimaryFocusArea===undefined) r.PrimaryFocusArea = '';
+          r.Contacts.forEach(c=>{ if(!c.id) c.id = Date.now()+Math.floor(Math.random()*1000); });
+          r.History.forEach(h=>{ if(!h.hid) h.hid = Date.now()+Math.floor(Math.random()*1000); });
+        });
+        return;
+      }
+      // fall through to seed defaults if stored value is missing/empty (e.g. from before data was bundled)
     }
   }catch(e){}
   ctState = { records: JSON.parse(JSON.stringify(DEFAULT_CT_RECORDS)) };
@@ -1617,37 +1606,6 @@ function renderCTDashboard(){
   document.querySelectorAll('#ctStageRow .stage').forEach(el=>{
     el.addEventListener('click', ()=>{ ctStatusFilter = el.dataset.map; populateCTFilters(); applyCTFilters(); renderCTTable(); renderCTDashboard(); });
   });
-
-  const buckets = {green:0, yellow:0, red:0, gray:0};
-  recs.forEach(r=>{ buckets[studyStatusBucket(r.StudyStatus)]++; });
-  const bucketMeta = [
-    {k:'green', label:'Enrolling (Recruiting)', color:'var(--sage)'},
-    {k:'yellow', label:'Upcoming', color:'var(--ochre)'},
-    {k:'red', label:'Completed / Not Recruiting', color:'var(--rust)'},
-    {k:'gray', label:'Unknown / Not Yet Identified', color:'var(--slate)'}
-  ];
-  document.getElementById('ctStudyStatusRow').innerHTML = bucketMeta.map(b=>`
-    <div class="stage ${ctStudyStatusFilter===b.k?'active':''}" data-bucket="${b.k}">
-      <div class="stage-label"><span class="status-bubble bubble-${b.k}"></span>${escapeHtml(b.label)}</div>
-      <div class="stage-num" style="color:${b.color}">${buckets[b.k]}</div>
-      <div class="stage-bar"><div class="stage-bar-fill" style="width:${total?buckets[b.k]/total*100:0}%;background:${b.color}"></div></div>
-    </div>
-  `).join('');
-  document.querySelectorAll('#ctStudyStatusRow .stage').forEach(el=>{
-    el.addEventListener('click', ()=>{ ctStudyStatusFilter = el.dataset.bucket; populateCTFilters(); applyCTFilters(); renderCTTable(); renderCTDashboard(); });
-  });
-
-  const areaCounts = {};
-  recs.forEach(r=>{ if(r.TherapeuticArea) areaCounts[r.TherapeuticArea] = (areaCounts[r.TherapeuticArea]||0)+1; });
-  const areaRows = Object.entries(areaCounts).sort((a,b)=>b[1]-a[1]);
-  document.getElementById('ctAreaMetricBody').innerHTML = areaRows.length===0 ? '<tr><td colspan="2" style="color:var(--muted);">No trials logged yet.</td></tr>' :
-    areaRows.map(([area,n])=>`<tr><td>${escapeHtml(area)}</td><td>${n}</td></tr>`).join('');
-
-  const sourceCounts = {};
-  recs.forEach(r=>{ const s = r.Source || 'Unspecified'; sourceCounts[s] = (sourceCounts[s]||0)+1; });
-  const sourceRows = Object.entries(sourceCounts).sort((a,b)=>b[1]-a[1]);
-  document.getElementById('ctSourceMetricBody').innerHTML = sourceRows.length===0 ? '<tr><td colspan="2" style="color:var(--muted);">No trials logged yet.</td></tr>' :
-    sourceRows.map(([src,n])=>`<tr><td>${escapeHtml(src)}</td><td>${n}</td></tr>`).join('');
 }
 function renderCTAll(){
   populateCTPhaseFilter();
@@ -1692,7 +1650,7 @@ function openCTDrawer(id){
       <div class="field-row">
         <div class="field">
           <label>Study status (recruiting status)</label>
-          <input type="text" id="ctEditStudyStatus" value="${escapeHtml(r.StudyStatus||'')}" placeholder="e.g. Recruiting, Not Yet Recruiting, Completed">
+          <select id="ctEditStudyStatus">${CT_STUDY_STATUSES.map(s=>`<option value="${s}" ${r.StudyStatus===s?'selected':''}>${s===''?'— not yet identified —':s}</option>`).join('')}</select>
         </div>
         <div class="field">
           <label>Notification source</label>
@@ -1914,7 +1872,9 @@ function openCTAddModal(){
         <div class="field"><label>Therapeutic area</label><input id="ctNewTherapeuticArea"></div>
       </div>
       <div class="field-row">
-        <div class="field"><label>Study status (recruiting status, optional)</label><input id="ctNewStudyStatus" placeholder="e.g. Recruiting"></div>
+        <div class="field"><label>Study status (recruiting status, optional)</label>
+          <select id="ctNewStudyStatus">${CT_STUDY_STATUSES.map(s=>`<option value="${s}">${s===''?'— not yet identified —':s}</option>`).join('')}</select>
+        </div>
         <div class="field">
           <label>Notification source</label>
           <select id="ctNewSource">${CT_SOURCES.map(s=>`<option value="${s}">${s}</option>`).join('')}</select>
